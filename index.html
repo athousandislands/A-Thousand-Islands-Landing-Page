@@ -7,12 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #000000; color: #ffffff; }
-        .fade-in { animation: fadeIn 2s ease-in forwards; opacity: 0; }
-        .delay-1 { animation-delay: 0.5s; }
-        .delay-2 { animation-delay: 1.5s; }
+        .fade-in { animation: fadeIn 2.5s ease-in forwards; opacity: 0; }
         @keyframes fadeIn { to { opacity: 1; } }
         
-        /* The slow blink animation */
+        /* The slow heartbeat blink */
         @keyframes blink {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
@@ -24,15 +22,11 @@
 
     <main class="text-center">
         <div class="fade-in">
-            <img src="/logo.png" alt="A Thousand Islands" class="w-80 md:w-[32rem] mx-auto mb-10">
-        </div>
-
-        <div class="fade-in delay-1">
-            <h1 class="text-5xl md:text-8xl font-light tracking-tight">A Thousand Islands</h1>
+            <h1 class="text-5xl md:text-8xl font-light tracking-tighter">A Thousand Islands</h1>
         </div>
     </main>
 
-    <footer class="absolute bottom-12 fade-in delay-2">
+    <footer class="absolute bottom-12 fade-in">
         <p class="text-white text-xs uppercase tracking-[0.4em] blink">Coming soon</p>
     </footer>
 
