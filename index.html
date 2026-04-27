@@ -11,23 +11,31 @@
         .delay-1 { animation-delay: 0.5s; }
         .delay-2 { animation-delay: 1.5s; }
         @keyframes fadeIn { to { opacity: 1; } }
+        
+        /* The slow blink animation */
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .blink { animation: blink 3s ease-in-out infinite; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center h-screen font-sans">
 
     <main class="text-center">
         <div class="fade-in">
-            <img img src="/logo.png" alt="A Thousand Islands" class="w-64 md:w-80 mx-auto mb-8">
+            <img src="/logo.png" alt="A Thousand Islands" class="w-80 md:w-[32rem] mx-auto mb-10">
         </div>
 
         <div class="fade-in delay-1">
-            <h1 class="text-3xl md:text-5xl font-medium tracking-tight">A Thousand Islands</h1>
+            <h1 class="text-5xl md:text-8xl font-light tracking-tight">A Thousand Islands</h1>
         </div>
     </main>
 
-    <footer class="absolute bottom-10 fade-in delay-2">
-        <p class="text-gray-500 text-xs uppercase tracking-[0.3em]">Coming soon...</p>
+    <footer class="absolute bottom-12 fade-in delay-2">
+        <p class="text-white text-xs uppercase tracking-[0.4em] blink">Coming soon</p>
     </footer>
 
 </body>
+</html>
 </html>
