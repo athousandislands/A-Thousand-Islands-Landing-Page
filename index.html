@@ -5,29 +5,484 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A Thousand Islands</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- User's specified r183 Import Map -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.183.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.183.0/examples/jsm/"
+      }
+    }
+    </script>
+
     <style>
-        body { background-color: #000000; color: #ffffff; }
-        .fade-in { animation: fadeIn 2.5s ease-in forwards; opacity: 0; }
-        @keyframes fadeIn { to { opacity: 1; } }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            color: #ffffff;
+            overflow: hidden;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            touch-action: none;
         }
-        .blink { animation: blink 3s ease-in-out infinite; }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2.5s ease-in-out;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .btn-container-top {
+            position: absolute;
+            top: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-container-bottom {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Sophisticated Glassmorphism Button */
+        .glass-edge-btn {
+            pointer-events: auto;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12); 
+            border-radius: 50px;
+            padding: 12px 40px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 1.5s ease, transform 1.5s ease, background 0.3s ease;
+            
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+
+        .glass-edge-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glass-edge-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        /* Elegant White Tracking Edge (No Siri Colors) */
+        .glass-edge-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50px;
+            padding: 1.5px; 
+            background: radial-gradient(
+                70px circle at var(--mouse-x) var(--mouse-y), 
+                rgba(255, 255, 255, 0.9), 
+                rgba(255, 255, 255, 0.2) 40%,
+                transparent 80%
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center h-screen font-sans">
+<body>
 
-    <main class="text-center">
-        <div class="fade-in">
-            <h1 class="text-5xl md:text-8xl font-medium tracking-tight">A Thousand Islands</h1>
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div class="btn-container-top">
+            <button id="wake-btn" class="glass-edge-btn">
+                <span>Wake up</span>
+            </button>
         </div>
-    </main>
 
-    <footer class="absolute bottom-12 fade-in">
-        <p class="text-white text-xs uppercase tracking-[0.4em] blink">Coming soon</p>
-    </footer>
+        <div class="btn-container-bottom">
+            <a id="contact-btn" href="mailto:contact@athousandislands.tech" class="glass-edge-btn">
+                <span>Contact for info</span>
+            </a>
+        </div>
+    </div>
 
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            text: "A Thousand Islands",
+            pixelSize: 0.04, // Requested size
+            density: 2,      // Very high density for perfectly smooth, solid text
+            colors: { bg: 0x000000, particle: 0xffffff }
+        };
+
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(CONFIG.colors.bg);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.z = 120;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // --- TEXT TO PIXELS (Safe Canvas Size + Stochastic Anti-Aliasing) ---
+        function getTextCoordinates() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            
+            // Universally safe canvas size to prevent black screens on mobile
+            canvas.width = 2048; 
+            canvas.height = 512;
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            
+            ctx.font = 'bold 180px Helvetica, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.fillText(CONFIG.text, canvas.width / 2, canvas.height / 2);
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const coordinates = [];
+            
+            for (let y = 0; y < canvas.height; y += CONFIG.density) {
+                for (let x = 0; x < canvas.width; x += CONFIG.density) {
+                    const index = (y * canvas.width + x) * 4;
+                    if (imgData[index] > 128) {
+                        // Sub-pixel stochastic jittering to eliminate rugged edges
+                        const jitterX = (Math.random() - 0.5) * 1.5;
+                        const jitterY = (Math.random() - 0.5) * 1.5;
+                        
+                        const posX = (x + jitterX - canvas.width / 2) * 0.05;
+                        const posY = -(y + jitterY - canvas.height / 2) * 0.05;
+                        coordinates.push({ x: posX, y: posY, z: 0 });
+                    }
+                }
+            }
+            return coordinates;
+        }
+
+        const textCoords = getTextCoordinates();
+        const particleCount = textCoords.length;
+        
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const randoms = new Float32Array(particleCount * 3); 
+
+        for (let i = 0; i < particleCount; i++) {
+            const coord = textCoords[i];
+            
+            positions[i * 3] = coord.x;
+            positions[i * 3 + 1] = coord.y;
+            positions[i * 3 + 2] = 0;
+
+            // Generate random scatter directions
+            randoms[i * 3] = (Math.random() - 0.5) * 2.0;
+            randoms[i * 3 + 1] = (Math.random() - 0.5) * 2.0;
+            randoms[i * 3 + 2] = (Math.random() - 0.5) * 2.0;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
+
+        // --- SHADERS (GPU Heavy Lifting) ---
+        const vertexShader = `
+            uniform vec2 uMouse;
+            uniform float uPixelSize;
+            
+            // Audio Uniforms
+            uniform float uAudioForce;
+            uniform vec2 uAudioCenter;
+            uniform float uAudioRadius;
+            
+            attribute vec3 aRandom;
+
+            void main() {
+                vec3 targetPos = position;
+                
+                // 1. Mouse Interaction (Tighter, Topical & Directional Force Field)
+                float distToMouse = distance(targetPos.xy, uMouse);
+                float mouseRadius = 6.0; // Much tighter radius for topical interaction
+                
+                // Sharper falloff curve for a precise brush feel
+                float mouseForce = pow(smoothstep(mouseRadius, 0.0, distToMouse), 1.5);
+                
+                vec3 mouseDisplacement = vec3(0.0);
+                if (mouseForce > 0.0) {
+                    vec2 pushDir = normalize(targetPos.xy - uMouse);
+                    // Add a tangential twist for a directional fluid feel
+                    vec2 twistDir = vec2(-pushDir.y, pushDir.x) * 0.6; 
+                    
+                    vec3 scatter = aRandom * 12.0;
+                    mouseDisplacement = (vec3(pushDir * 4.0 + twistDir, 0.0) + scatter) * mouseForce;
+                }
+
+                // 2. Audio Interaction (Regional Force Field)
+                vec3 audioDisplacement = vec3(0.0);
+                if (uAudioForce > 0.0) {
+                    float distToAudio = distance(targetPos.xy, uAudioCenter);
+                    float audioRegionForce = smoothstep(uAudioRadius, 0.0, distToAudio);
+                    
+                    if (audioRegionForce > 0.0) {
+                        vec2 pushDir = normalize(targetPos.xy - uAudioCenter + vec2(0.001)); 
+                        vec3 scatter = aRandom * 25.0; 
+                        audioDisplacement = (vec3(pushDir * 8.0, 0.0) + scatter) * uAudioForce * audioRegionForce;
+                    }
+                }
+
+                // Combine forces
+                targetPos += mouseDisplacement + audioDisplacement;
+
+                vec4 mvPosition = modelViewMatrix * vec4(targetPos, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+                
+                // Scale point size to ensure perfect overlap and solid text appearance
+                gl_PointSize = (uPixelSize * 45.0) * (800.0 / -mvPosition.z);
+            }
+        `;
+
+        const fragmentShader = `
+            void main() {
+                vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                float ll = length(xy);
+                if (ll > 0.5) discard;
+                
+                // Soft edge for perfect blending
+                float alpha = smoothstep(0.5, 0.3, ll);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+            }
+        `;
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uMouse: { value: new THREE.Vector2(-999, -999) },
+                uPixelSize: { value: CONFIG.pixelSize },
+                uAudioForce: { value: 0.0 },
+                uAudioCenter: { value: new THREE.Vector2(0, 0) },
+                uAudioRadius: { value: 20.0 }
+            },
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.NormalBlending // Keeps the text looking solid white
+        });
+
+        const particleSystem = new THREE.Points(geometry, material);
+        scene.add(particleSystem);
+
+        // Responsive scaling to make it a MASSIVE focal point, but safely within screen bounds
+        function updateScale() {
+            if (window.innerWidth < 768) {
+                particleSystem.scale.set(0.4, 0.4, 0.4); 
+            } else if (window.innerWidth < 1024) {
+                particleSystem.scale.set(0.8, 0.8, 0.8);
+            } else {
+                particleSystem.scale.set(1.5, 1.5, 1.5); // Massive focal point, but fits the screen
+            }
+        }
+        updateScale();
+
+        // --- AUDIO SYSTEM (Wake / Sleep Logic) ---
+        let audioContext, analyser, dataArray;
+        let isAudioActive = false;
+        let currentAudioForce = 0;
+        let lastBassNorm = 0;
+        let localAudioStream = null;
+
+        const wakeBtn = document.getElementById('wake-btn');
+        const wakeText = wakeBtn.querySelector('span');
+
+        async function toggleAudio() {
+            if (!isAudioActive) {
+                // WAKE UP
+                try {
+                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const source = audioContext.createMediaStreamSource(localAudioStream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    
+                    isAudioActive = true;
+                    wakeText.innerText = "Sleep";
+                } catch (err) {
+                    console.warn("Microphone access denied.", err);
+                }
+            } else {
+                // SLEEP
+                if (localAudioStream) {
+                    localAudioStream.getTracks().forEach(track => track.stop());
+                }
+                if (audioContext) {
+                    audioContext.close();
+                }
+                
+                isAudioActive = false;
+                wakeText.innerText = "Wake up";
+                
+                // Force particles to settle immediately
+                material.uniforms.uAudioForce.value = 0;
+                currentAudioForce = 0;
+            }
+        }
+
+        wakeBtn.addEventListener('click', toggleAudio);
+
+        // --- INTERACTION (Mouse Tracking for Canvas & Buttons) ---
+        const mouse = new THREE.Vector2(-999, -999);
+        let targetMouse = new THREE.Vector2(-999, -999);
+        const buttons = document.querySelectorAll('.glass-edge-btn');
+
+        function onMove(event) {
+            const x = event.touches ? event.touches[0].clientX : event.clientX;
+            const y = event.touches ? event.touches[0].clientY : event.clientY;
+            
+            // Canvas Mouse
+            const ndcX = (x / window.innerWidth) * 2 - 1;
+            const ndcY = -(y / window.innerHeight) * 2 + 1;
+
+            const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
+            vec.unproject(camera);
+            vec.sub(camera.position).normalize();
+            const distance = -camera.position.z / vec.z;
+            const pos = camera.position.clone().add(vec.multiplyScalar(distance));
+            
+            targetMouse.x = pos.x / particleSystem.scale.x;
+            targetMouse.y = pos.y / particleSystem.scale.y;
+
+            // Button Edge Lighting
+            buttons.forEach(btn => {
+                const rect = btn.getBoundingClientRect();
+                const btnX = x - rect.left;
+                const btnY = y - rect.top;
+                btn.style.setProperty('--mouse-x', `${btnX}px`);
+                btn.style.setProperty('--mouse-y', `${btnY}px`);
+            });
+        }
+        
+        function onEnd() {
+            targetMouse.x = -999;
+            targetMouse.y = -999;
+            
+            buttons.forEach(btn => {
+                btn.style.setProperty('--mouse-x', `50%`);
+                btn.style.setProperty('--mouse-y', `50%`);
+            });
+        }
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove);
+        window.addEventListener('touchend', onEnd);
+        window.addEventListener('mouseleave', onEnd);
+
+        // --- ANIMATION CHOREOGRAPHY ---
+        setTimeout(() => {
+            document.getElementById('canvas-container').style.opacity = 1;
+            
+            // Wait 3 seconds to ensure logo is fully settled before showing buttons
+            setTimeout(() => {
+                document.getElementById('wake-btn').classList.add('visible');
+                document.getElementById('contact-btn').classList.add('visible');
+            }, 3000); 
+        }, 200);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Smooth mouse interpolation
+            mouse.lerp(targetMouse, 0.15);
+            material.uniforms.uMouse.value.copy(mouse);
+
+            // Audio Processing
+            let targetAudioForce = 0;
+            if (isAudioActive && analyser) {
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Focus on bass frequencies
+                let bassSum = 0;
+                for(let i = 0; i < 8; i++) {
+                    bassSum += dataArray[i];
+                }
+                let bassAvg = bassSum / 8.0;
+                let normBass = bassAvg / 255.0;
+                
+                // Beat Detection: Pick a new random region to disperse
+                if (normBass > 0.65 && lastBassNorm <= 0.65) {
+                    // Adjusted coordinates for the new 3D scale
+                    const randomX = (Math.random() - 0.5) * 80.0; 
+                    const randomY = (Math.random() - 0.5) * 10.0;
+                    const randomRadius = Math.random() * 15.0 + 10.0; 
+
+                    material.uniforms.uAudioCenter.value.set(randomX, randomY);
+                    material.uniforms.uAudioRadius.value = randomRadius;
+                }
+                lastBassNorm = normBass;
+
+                // Apply curve for punchy reaction
+                targetAudioForce = Math.pow(normBass, 4.0) * 2.5; 
+            }
+
+            // Slower snap back (0.03) for a lingering, floaty settle
+            currentAudioForce += (targetAudioForce - currentAudioForce) * 0.03;
+            material.uniforms.uAudioForce.value = currentAudioForce;
+
+            renderer.render(scene, camera);
+        }
+
+        // --- RESIZE HANDLER ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            updateScale();
+        });
+
+        // Start loop
+        animate();
+
+    </script>
 </body>
+</html>
 </html>
