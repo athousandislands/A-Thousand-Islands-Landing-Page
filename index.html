@@ -330,8 +330,8 @@
                 // Apply shape distortion
                 pos += normal * noise;
                 
-                // Increased expansion by 50% (0.27 -> 0.40)
-                pos *= 1.0 + (uAudio * 0.40);
+                // Increased expansion by 130% (0.40 -> 0.92)
+                pos *= 1.0 + (uAudio * 0.92);
 
                 vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
@@ -352,19 +352,22 @@
                 // Base color
                 vec3 baseColor = vec3(1.0, 1.0, 1.0);
 
-                // Dramatic fiery gradient colors
-                vec3 colorRed = vec3(1.0, 0.15, 0.05); 
+                // 4-Color Palette (Red, Orange, Purple, Cyan)
+                vec3 colorRed = vec3(1.0, 0.1, 0.2); 
                 vec3 colorOrange = vec3(1.0, 0.5, 0.0); 
-                vec3 colorPurple = vec3(0.6, 0.1, 0.8); 
+                vec3 colorPurple = vec3(0.6, 0.1, 0.9); 
+                vec3 colorCyan = vec3(0.0, 0.8, 1.0);
                 
-                // Create a moving gradient based on position and time
-                float mixFactor1 = sin(vPos.x * 5.0 + uTime * 3.0) * 0.5 + 0.5;
+                // Create a volumetric 4-way gradient using X, Y, and Z coordinates
+                float mixFactor1 = sin(vPos.x * 4.0 + uTime * 2.5) * 0.5 + 0.5;
                 float mixFactor2 = cos(vPos.y * 4.0 - uTime * 2.0) * 0.5 + 0.5;
+                float mixFactor3 = sin(vPos.z * 4.0 + uTime * 1.5) * 0.5 + 0.5;
                 
-                vec3 gradColor = mix(colorRed, colorOrange, mixFactor1);
-                gradColor = mix(gradColor, colorPurple, mixFactor2 * 0.4); // Subtle purple hints
+                vec3 grad1 = mix(colorRed, colorOrange, mixFactor1);
+                vec3 grad2 = mix(colorPurple, colorCyan, mixFactor2);
+                vec3 gradColor = mix(grad1, grad2, mixFactor3);
 
-                // Make treble effect much more dramatic and sensitive
+                // Apply treble effect
                 float trebleEffect = smoothstep(0.1, 0.7, uTreble * 3.5); 
                 vec3 finalColor = mix(baseColor, gradColor, trebleEffect);
 
@@ -512,14 +515,13 @@
 
                 // --- Treble Analysis (Controls Color) ---
                 let trebleSum = 0;
-                const trebleStart = 40; // Lowered start to catch more high-mids/treble
+                const trebleStart = 40; 
                 const trebleEnd = 100;
                 for (let i = trebleStart; i < trebleEnd; i++) {
                     trebleSum += dataArray[i];
                 }
                 let trebleAverage = trebleSum / (trebleEnd - trebleStart);
                 let trebleValue = trebleAverage / 255;
-                // Increased smoothing speed for snappier color changes
                 material.uniforms.uTreble.value += (trebleValue - material.uniforms.uTreble.value) * 0.2;
 
             } else {
