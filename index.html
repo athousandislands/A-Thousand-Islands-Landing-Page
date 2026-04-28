@@ -106,32 +106,32 @@
         .btn {
             position: absolute;
             padding: 14px 32px;
-            border-radius: 999px; /* Perfect pill shape */
-            background: rgba(15, 15, 15, 0.5); /* Dark translucent glass */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            border-radius: 999px; 
             color: #fff;
             font-family: inherit;
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 300; /* Lighter font weight */
             letter-spacing: 0.5px;
             cursor: pointer;
             pointer-events: auto;
-            border: 1px solid transparent; 
             outline: none;
             transition: transform 0.3s ease, opacity 1s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .btn:active {
             transform: scale(0.95);
         }
 
-        /* Wake Up Button - Colored, Sharper Edge Light */
+        /* --- Wake Up Button --- */
         #btn-wake {
             bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
+            background: rgba(15, 15, 15, 0.5); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid transparent; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         #btn-wake:active {
@@ -144,12 +144,13 @@
             transform: translate(-50%, 20px);
         }
 
+        /* Colored Edge */
         #btn-wake::before {
             content: "";
             position: absolute;
             inset: 0;
             border-radius: 999px;
-            padding: 1px; /* Thinner, sharper border */
+            padding: 1px; 
             background: linear-gradient(90deg, #3b82f6, #ef4444, #f59e0b, #3b82f6);
             background-size: 300% 100%;
             animation: border-flow 3s linear infinite;
@@ -159,26 +160,40 @@
             pointer-events: none;
         }
 
+        /* Subtle Glow - Activates on Hover/Click */
         #btn-wake::after {
             content: "";
             position: absolute;
-            inset: -1px; /* Tighter radius */
+            inset: -1px; 
             border-radius: 999px;
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.4), rgba(239, 68, 68, 0.4), rgba(245, 158, 11, 0.4), rgba(59, 130, 246, 0.4));
+            background: linear-gradient(90deg, #3b82f6, #ef4444, #f59e0b, #3b82f6);
             background-size: 300% 100%;
-            animation: border-flow 3s linear infinite, glow-pulse 2s ease-in-out infinite alternate;
+            animation: border-flow 3s linear infinite;
             z-index: -1;
-            filter: blur(3px); /* Much smaller blur radius */
+            filter: blur(2px); /* Very tight radius */
+            opacity: 0.15; /* Extremely subtle base */
+            transition: opacity 0.3s ease, filter 0.3s ease;
             pointer-events: none;
         }
 
-        /* Contact Us Button - Subtle White Edge Light */
+        #btn-wake:hover::after,
+        #btn-wake:active::after {
+            opacity: 0.6;
+            filter: blur(4px);
+        }
+
+        /* --- Contact Us Button --- */
         #btn-contact {
             top: 30px;
             right: 30px;
             opacity: 0;
             pointer-events: none;
             transform: translateY(-10px);
+            /* Greyish Glassmorphism */
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         @media (max-width: 768px) {
@@ -191,36 +206,35 @@
             transform: translateY(0);
         }
 
-        #btn-contact::before {
+        /* Dynamic Mouse-Tracking Edge Light */
+        #btn-contact::after {
             content: "";
             position: absolute;
-            inset: 0;
+            inset: -1px; /* Covers the static border */
             border-radius: 999px;
             padding: 1px;
-            /* Subtle white/grey moving gradient */
-            background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.5), rgba(255,255,255,0.05));
-            background-size: 200% 100%;
-            animation: border-flow-contact 4s linear infinite;
+            background: radial-gradient(
+                60px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                rgba(255, 255, 255, 0.8), 
+                transparent 100%
+            );
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease;
             pointer-events: none;
+        }
+
+        #btn-contact:hover::after,
+        #btn-contact:active::after {
+            opacity: 1; /* Shows on interaction */
         }
 
         /* Animations */
         @keyframes border-flow {
             0% { background-position: 0% 0; }
             100% { background-position: 300% 0; }
-        }
-
-        @keyframes border-flow-contact {
-            0% { background-position: 0% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        @keyframes glow-pulse {
-            0% { opacity: 0.2; }
-            100% { opacity: 0.6; }
         }
 
         /* 3D Canvas */
@@ -256,13 +270,25 @@
     <script type="module">
         import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-        // --- UI Elements ---
+        // --- UI Elements & Mouse Tracking ---
         const logoCenter = document.getElementById('logo-center');
         const logoCorner = document.getElementById('logo-corner');
         const comingSoon = document.getElementById('coming-soon');
         const btnWake = document.getElementById('btn-wake');
         const btnContact = document.getElementById('btn-contact');
         const canvasContainer = document.getElementById('canvas-container');
+        const buttons = document.querySelectorAll('.btn');
+
+        // Track mouse for dynamic button edge lighting
+        buttons.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                btn.style.setProperty('--mouse-x', `${x}px`);
+                btn.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
 
         // --- State ---
         let isActive = false;
@@ -339,12 +365,19 @@
                 vec3 pos = position;
                 vec3 normal = normalize(pos);
 
-                float noiseFreq = 0.7; 
-                float noiseAmp = 0.08 + (uAudio * 0.3); 
+                // Reduced frequency for smoother, wider waves (less ridged)
+                float noiseFreq = 0.5; 
+                
+                // Reduced base amplitude so it stays more circular, but still reacts to audio
+                float noiseAmp = 0.04 + (uAudio * 0.2); 
                 vec3 noisePos = vec3(pos.x * noiseFreq + uTime * 0.2, pos.y * noiseFreq + uTime * 0.3, pos.z * noiseFreq);
                 float noise = snoise(noisePos) * noiseAmp;
 
+                // Apply shape distortion
                 pos += normal * noise;
+                
+                // Increased overall size scaling based on bass by another 5% (0.15 -> 0.20)
+                pos *= 1.0 + (uAudio * 0.20);
 
                 vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
