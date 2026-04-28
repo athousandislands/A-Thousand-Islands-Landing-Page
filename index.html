@@ -44,19 +44,19 @@
         #logo-center {
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%) scale(0.95);
             font-size: 5vw;
-            opacity: 1;
+            opacity: 0; /* Starts hidden for initial fade-in */
+            pointer-events: none;
         }
 
         @media (max-width: 768px) {
             #logo-center { font-size: 2.5rem; }
         }
 
-        #logo-center.hidden {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.95);
-            pointer-events: none;
+        #logo-center.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         #logo-corner {
@@ -77,16 +77,15 @@
             transform: translateY(0);
         }
 
-        /* Coming Soon Text */
+        /* Coming Soon Text - Enhanced Glow */
         #coming-soon {
             position: absolute;
             top: 60%;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 300;
-            letter-spacing: 4px;
-            text-transform: uppercase;
+            letter-spacing: 1px;
             color: rgba(255, 255, 255, 0.8);
             opacity: 0;
             pointer-events: none;
@@ -98,11 +97,17 @@
         }
 
         @keyframes text-pulse {
-            0%, 100% { opacity: 0.1; }
-            50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+            0%, 100% { 
+                opacity: 0.3; 
+                text-shadow: 0 0 5px rgba(255,255,255,0.2); 
+            }
+            50% { 
+                opacity: 1; 
+                text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 0 40px rgba(255,255,255,0.5); 
+            }
         }
 
-        /* Base Button Styles */
+        /* Wake Up Button */
         .btn {
             position: absolute;
             padding: 14px 32px;
@@ -110,38 +115,35 @@
             color: #fff;
             font-family: inherit;
             font-size: 0.95rem;
-            font-weight: 300; /* Lighter font weight */
+            font-weight: 300; 
             letter-spacing: 0.5px;
             cursor: pointer;
             pointer-events: auto;
             outline: none;
-            transition: transform 0.3s ease, opacity 1s ease;
+            transition: transform 0.3s ease, opacity 1.5s ease;
         }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        /* --- Wake Up Button --- */
         #btn-wake {
             bottom: 50px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(20px);
             background: rgba(15, 15, 15, 0.5); 
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid transparent; 
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        #btn-wake:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-
-        #btn-wake.hidden {
-            opacity: 0;
+            opacity: 0; /* Starts hidden for initial fade-in */
             pointer-events: none;
-            transform: translate(-50%, 20px);
+        }
+
+        #btn-wake.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        #btn-wake.show:active {
+            transform: translateX(-50%) translateY(0) scale(0.95);
         }
 
         /* Colored Edge */
@@ -170,68 +172,24 @@
             background-size: 300% 100%;
             animation: border-flow 3s linear infinite;
             z-index: -1;
-            filter: blur(2px); /* Very tight radius */
-            opacity: 0.15; /* Extremely subtle base */
+            filter: blur(2px); 
+            opacity: 0.15; 
             transition: opacity 0.3s ease, filter 0.3s ease;
             pointer-events: none;
         }
 
-        #btn-wake:hover::after,
+        @media (hover: hover) {
+            #btn-wake:hover::after {
+                opacity: 0.6;
+                filter: blur(4px);
+            }
+        }
+
         #btn-wake:active::after {
             opacity: 0.6;
             filter: blur(4px);
         }
 
-        /* --- Contact Us Button --- */
-        #btn-contact {
-            top: 30px;
-            right: 30px;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(-10px);
-            /* Greyish Glassmorphism */
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        @media (max-width: 768px) {
-            #btn-contact { top: 20px; right: 20px; padding: 12px 24px; font-size: 0.85rem; }
-        }
-
-        #btn-contact.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
-        }
-
-        /* Dynamic Mouse-Tracking Edge Light */
-        #btn-contact::after {
-            content: "";
-            position: absolute;
-            inset: -1px; /* Covers the static border */
-            border-radius: 999px;
-            padding: 1px;
-            background: radial-gradient(
-                60px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-                rgba(255, 255, 255, 0.8), 
-                transparent 100%
-            );
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0; /* Hidden by default */
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        #btn-contact:hover::after,
-        #btn-contact:active::after {
-            opacity: 1; /* Shows on interaction */
-        }
-
-        /* Animations */
         @keyframes border-flow {
             0% { background-position: 0% 0; }
             100% { background-position: 300% 0; }
@@ -261,7 +219,6 @@
         <div id="logo-corner" class="logo">A Thousand Islands</div>
         <div id="coming-soon">Coming Soon</div>
         <button id="btn-wake" class="btn">Wake Up</button>
-        <button id="btn-contact" class="btn">Contact us</button>
     </div>
 
     <div id="canvas-container"></div>
@@ -270,24 +227,24 @@
     <script type="module">
         import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-        // --- UI Elements & Mouse Tracking ---
+        // --- UI Elements ---
         const logoCenter = document.getElementById('logo-center');
         const logoCorner = document.getElementById('logo-corner');
         const comingSoon = document.getElementById('coming-soon');
         const btnWake = document.getElementById('btn-wake');
-        const btnContact = document.getElementById('btn-contact');
         const canvasContainer = document.getElementById('canvas-container');
-        const buttons = document.querySelectorAll('.btn');
 
-        // Track mouse for dynamic button edge lighting
-        buttons.forEach(btn => {
-            btn.addEventListener('mousemove', (e) => {
-                const rect = btn.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                btn.style.setProperty('--mouse-x', `${x}px`);
-                btn.style.setProperty('--mouse-y', `${y}px`);
-            });
+        // --- Initial Load Animation ---
+        window.addEventListener('load', () => {
+            // Fade in logo after 0.5s
+            setTimeout(() => {
+                logoCenter.classList.add('show');
+            }, 500);
+
+            // Fade in button after 2s
+            setTimeout(() => {
+                btnWake.classList.add('show');
+            }, 2000);
         });
 
         // --- State ---
@@ -365,10 +322,7 @@
                 vec3 pos = position;
                 vec3 normal = normalize(pos);
 
-                // Reduced frequency for smoother, wider waves (less ridged)
                 float noiseFreq = 0.5; 
-                
-                // Reduced base amplitude so it stays more circular, but still reacts to audio
                 float noiseAmp = 0.04 + (uAudio * 0.2); 
                 vec3 noisePos = vec3(pos.x * noiseFreq + uTime * 0.2, pos.y * noiseFreq + uTime * 0.3, pos.z * noiseFreq);
                 float noise = snoise(noisePos) * noiseAmp;
@@ -376,8 +330,8 @@
                 // Apply shape distortion
                 pos += normal * noise;
                 
-                // Increased overall size scaling based on bass by another 5% (0.15 -> 0.20)
-                pos *= 1.0 + (uAudio * 0.20);
+                // Increased expansion by 50% (0.27 -> 0.40)
+                pos *= 1.0 + (uAudio * 0.40);
 
                 vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
@@ -387,16 +341,35 @@
         `;
 
         const fragmentShader = `
+            uniform float uTime;
+            uniform float uTreble;
             varying vec3 vPos;
 
             void main() {
                 vec2 coord = gl_PointCoord - vec2(0.5);
                 if (length(coord) > 0.5) discard;
 
-                vec3 color = vec3(1.0, 1.0, 1.0);
-                float alpha = smoothstep(0.5, 0.1, length(coord));
+                // Base color
+                vec3 baseColor = vec3(1.0, 1.0, 1.0);
 
-                gl_FragColor = vec4(color, alpha * 0.8);
+                // Dramatic fiery gradient colors
+                vec3 colorRed = vec3(1.0, 0.15, 0.05); 
+                vec3 colorOrange = vec3(1.0, 0.5, 0.0); 
+                vec3 colorPurple = vec3(0.6, 0.1, 0.8); 
+                
+                // Create a moving gradient based on position and time
+                float mixFactor1 = sin(vPos.x * 5.0 + uTime * 3.0) * 0.5 + 0.5;
+                float mixFactor2 = cos(vPos.y * 4.0 - uTime * 2.0) * 0.5 + 0.5;
+                
+                vec3 gradColor = mix(colorRed, colorOrange, mixFactor1);
+                gradColor = mix(gradColor, colorPurple, mixFactor2 * 0.4); // Subtle purple hints
+
+                // Make treble effect much more dramatic and sensitive
+                float trebleEffect = smoothstep(0.1, 0.7, uTreble * 3.5); 
+                vec3 finalColor = mix(baseColor, gradColor, trebleEffect);
+
+                float alpha = smoothstep(0.5, 0.1, length(coord));
+                gl_FragColor = vec4(finalColor, alpha * 0.8);
             }
         `;
 
@@ -410,7 +383,9 @@
             const v = Math.random();
             const theta = u * 2.0 * Math.PI;
             const phi = Math.acos(2.0 * v - 1.0);
-            const r = 1.1; 
+            
+            // Radius reduced by 30%
+            const r = 0.77; 
 
             positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
             positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
@@ -424,7 +399,8 @@
             fragmentShader,
             uniforms: {
                 uTime: { value: 0 },
-                uAudio: { value: 0 }
+                uAudio: { value: 0 },
+                uTreble: { value: 0 }
             },
             transparent: true,
             depthWrite: false,
@@ -472,12 +448,9 @@
             comingSoon.classList.remove('pulsing');
 
             // UI Transitions
-            logoCenter.classList.add('hidden');
-            btnWake.classList.add('hidden');
+            logoCenter.classList.remove('show');
+            btnWake.classList.remove('show');
             canvasContainer.classList.add('active');
-            
-            // Contact button fades in and stays active permanently
-            btnContact.classList.add('active');
 
             // Fade in corner logo slightly after center fades out
             setTimeout(() => {
@@ -487,18 +460,18 @@
             // Start Audio & Animation
             setupAudio();
 
-            // Set 15 second reset timer
-            resetTimeout = setTimeout(triggerEndingSequence, 15000);
+            // Set 20 second reset timer
+            resetTimeout = setTimeout(triggerEndingSequence, 20000);
         });
 
         function triggerEndingSequence() {
-            // Fade out orb and corner logo (Contact button remains)
+            // Fade out orb and corner logo
             canvasContainer.classList.remove('active');
             logoCorner.classList.remove('active');
             
             // Fade in Center Logo and Coming Soon
             setTimeout(() => {
-                logoCenter.classList.remove('hidden');
+                logoCenter.classList.add('show');
                 comingSoon.classList.add('pulsing');
             }, 1000);
 
@@ -507,7 +480,7 @@
             // Let it pulse for 5 seconds, then fully reset
             finalResetTimeout = setTimeout(() => {
                 comingSoon.classList.remove('pulsing');
-                btnWake.classList.remove('hidden');
+                btnWake.classList.add('show');
                 isActive = false;
             }, 6000);
         }
@@ -527,17 +500,31 @@
             if (isActive && analyser && dataArray) {
                 analyser.getByteFrequencyData(dataArray);
                 
-                let sum = 0;
+                // --- Bass Analysis (Controls Expansion) ---
+                let bassSum = 0;
                 const bassRange = 20; 
                 for (let i = 0; i < bassRange; i++) {
-                    sum += dataArray[i];
+                    bassSum += dataArray[i];
                 }
-                let average = sum / bassRange;
-                
-                let audioValue = average / 255;
+                let bassAverage = bassSum / bassRange;
+                let audioValue = bassAverage / 255;
                 material.uniforms.uAudio.value += (audioValue - material.uniforms.uAudio.value) * 0.1; 
+
+                // --- Treble Analysis (Controls Color) ---
+                let trebleSum = 0;
+                const trebleStart = 40; // Lowered start to catch more high-mids/treble
+                const trebleEnd = 100;
+                for (let i = trebleStart; i < trebleEnd; i++) {
+                    trebleSum += dataArray[i];
+                }
+                let trebleAverage = trebleSum / (trebleEnd - trebleStart);
+                let trebleValue = trebleAverage / 255;
+                // Increased smoothing speed for snappier color changes
+                material.uniforms.uTreble.value += (trebleValue - material.uniforms.uTreble.value) * 0.2;
+
             } else {
                 material.uniforms.uAudio.value += (0 - material.uniforms.uAudio.value) * 0.05;
+                material.uniforms.uTreble.value += (0 - material.uniforms.uTreble.value) * 0.05;
             }
 
             renderer.render(scene, camera);
