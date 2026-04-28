@@ -27,12 +27,13 @@
             touch-action: none;
         }
 
+        /* Use dvh (Dynamic Viewport Height) to fix mobile address bar issues */
         #canvas-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh; 
             z-index: 1;
             opacity: 0;
             transition: opacity 2.5s ease-in-out;
@@ -43,14 +44,14 @@
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh;
             z-index: 10;
             pointer-events: none;
         }
 
         .btn-container-top {
             position: absolute;
-            top: 50px;
+            top: max(40px, env(safe-area-inset-top));
             width: 100%;
             display: flex;
             justify-content: center;
@@ -58,7 +59,7 @@
 
         .btn-container-bottom {
             position: absolute;
-            bottom: 60px;
+            bottom: max(40px, env(safe-area-inset-bottom));
             width: 100%;
             display: flex;
             justify-content: center;
@@ -100,7 +101,7 @@
             background: rgba(255, 255, 255, 0.16);
         }
 
-        /* Elegant White Tracking Edge (No Siri Colors) */
+        /* Elegant White Tracking Edge */
         .glass-edge-btn::before {
             content: '';
             position: absolute;
@@ -142,11 +143,15 @@
     <script type="module">
         import * as THREE from 'three';
 
+        // --- MOBILE OPTIMIZATION ---
+        const isMobile = window.innerWidth < 768;
+
         // --- CONFIGURATION ---
         const CONFIG = {
             text: "A Thousand Islands",
-            pixelSize: 0.04, // Requested size
-            density: 2,      // Very high density for perfectly smooth, solid text
+            pixelSize: 0.02, // Requested size
+            // Dynamically adjust density: lower density (higher number) on mobile for performance
+            density: isMobile ? 3.5 : 2, 
             colors: { bg: 0x000000, particle: 0xffffff }
         };
 
@@ -168,7 +173,6 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             
-            // Universally safe canvas size to prevent black screens on mobile
             canvas.width = 2048; 
             canvas.height = 512;
 
@@ -189,7 +193,6 @@
                 for (let x = 0; x < canvas.width; x += CONFIG.density) {
                     const index = (y * canvas.width + x) * 4;
                     if (imgData[index] > 128) {
-                        // Sub-pixel stochastic jittering to eliminate rugged edges
                         const jitterX = (Math.random() - 0.5) * 1.5;
                         const jitterY = (Math.random() - 0.5) * 1.5;
                         
@@ -227,7 +230,6 @@
 
         // --- SHADERS (GPU Heavy Lifting) ---
         const vertexShader = `
-            uniform vec2 uMouse;
             uniform float uPixelSize;
             
             // Audio Uniforms
@@ -240,24 +242,7 @@
             void main() {
                 vec3 targetPos = position;
                 
-                // 1. Mouse Interaction (Tighter, Topical & Directional Force Field)
-                float distToMouse = distance(targetPos.xy, uMouse);
-                float mouseRadius = 6.0; // Much tighter radius for topical interaction
-                
-                // Sharper falloff curve for a precise brush feel
-                float mouseForce = pow(smoothstep(mouseRadius, 0.0, distToMouse), 1.5);
-                
-                vec3 mouseDisplacement = vec3(0.0);
-                if (mouseForce > 0.0) {
-                    vec2 pushDir = normalize(targetPos.xy - uMouse);
-                    // Add a tangential twist for a directional fluid feel
-                    vec2 twistDir = vec2(-pushDir.y, pushDir.x) * 0.6; 
-                    
-                    vec3 scatter = aRandom * 12.0;
-                    mouseDisplacement = (vec3(pushDir * 4.0 + twistDir, 0.0) + scatter) * mouseForce;
-                }
-
-                // 2. Audio Interaction (Regional Force Field)
+                // Audio Interaction (Dramatic Regional Force Field)
                 vec3 audioDisplacement = vec3(0.0);
                 if (uAudioForce > 0.0) {
                     float distToAudio = distance(targetPos.xy, uAudioCenter);
@@ -265,19 +250,20 @@
                     
                     if (audioRegionForce > 0.0) {
                         vec2 pushDir = normalize(targetPos.xy - uAudioCenter + vec2(0.001)); 
-                        vec3 scatter = aRandom * 25.0; 
-                        audioDisplacement = (vec3(pushDir * 8.0, 0.0) + scatter) * uAudioForce * audioRegionForce;
+                        
+                        // DRAMATIC SCATTER: Massively increased multipliers
+                        vec3 scatter = aRandom * 60.0; 
+                        audioDisplacement = (vec3(pushDir * 20.0, 0.0) + scatter) * uAudioForce * audioRegionForce;
                     }
                 }
 
-                // Combine forces
-                targetPos += mouseDisplacement + audioDisplacement;
+                targetPos += audioDisplacement;
 
                 vec4 mvPosition = modelViewMatrix * vec4(targetPos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
                 
                 // Scale point size to ensure perfect overlap and solid text appearance
-                gl_PointSize = (uPixelSize * 45.0) * (800.0 / -mvPosition.z);
+                gl_PointSize = (uPixelSize * 80.0) * (800.0 / -mvPosition.z);
             }
         `;
 
@@ -297,7 +283,6 @@
             vertexShader,
             fragmentShader,
             uniforms: {
-                uMouse: { value: new THREE.Vector2(-999, -999) },
                 uPixelSize: { value: CONFIG.pixelSize },
                 uAudioForce: { value: 0.0 },
                 uAudioCenter: { value: new THREE.Vector2(0, 0) },
@@ -305,20 +290,20 @@
             },
             transparent: true,
             depthWrite: false,
-            blending: THREE.NormalBlending // Keeps the text looking solid white
+            blending: THREE.NormalBlending 
         });
 
         const particleSystem = new THREE.Points(geometry, material);
         scene.add(particleSystem);
 
-        // Responsive scaling to make it a MASSIVE focal point, but safely within screen bounds
+        // Responsive scaling (Slightly bigger across all devices)
         function updateScale() {
             if (window.innerWidth < 768) {
-                particleSystem.scale.set(0.4, 0.4, 0.4); 
+                particleSystem.scale.set(0.5, 0.5, 0.5); // Was 0.4
             } else if (window.innerWidth < 1024) {
-                particleSystem.scale.set(0.8, 0.8, 0.8);
+                particleSystem.scale.set(1.0, 1.0, 1.0); // Was 0.8
             } else {
-                particleSystem.scale.set(1.5, 1.5, 1.5); // Massive focal point, but fits the screen
+                particleSystem.scale.set(1.8, 1.8, 1.8); // Was 1.5
             }
         }
         updateScale();
@@ -370,28 +355,13 @@
 
         wakeBtn.addEventListener('click', toggleAudio);
 
-        // --- INTERACTION (Mouse Tracking for Canvas & Buttons) ---
-        const mouse = new THREE.Vector2(-999, -999);
-        let targetMouse = new THREE.Vector2(-999, -999);
+        // --- INTERACTION (Button Edge Lighting Only) ---
         const buttons = document.querySelectorAll('.glass-edge-btn');
 
         function onMove(event) {
             const x = event.touches ? event.touches[0].clientX : event.clientX;
             const y = event.touches ? event.touches[0].clientY : event.clientY;
             
-            // Canvas Mouse
-            const ndcX = (x / window.innerWidth) * 2 - 1;
-            const ndcY = -(y / window.innerHeight) * 2 + 1;
-
-            const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
-            vec.unproject(camera);
-            vec.sub(camera.position).normalize();
-            const distance = -camera.position.z / vec.z;
-            const pos = camera.position.clone().add(vec.multiplyScalar(distance));
-            
-            targetMouse.x = pos.x / particleSystem.scale.x;
-            targetMouse.y = pos.y / particleSystem.scale.y;
-
             // Button Edge Lighting
             buttons.forEach(btn => {
                 const rect = btn.getBoundingClientRect();
@@ -403,9 +373,6 @@
         }
         
         function onEnd() {
-            targetMouse.x = -999;
-            targetMouse.y = -999;
-            
             buttons.forEach(btn => {
                 btn.style.setProperty('--mouse-x', `50%`);
                 btn.style.setProperty('--mouse-y', `50%`);
@@ -430,10 +397,6 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            
-            // Smooth mouse interpolation
-            mouse.lerp(targetMouse, 0.15);
-            material.uniforms.uMouse.value.copy(mouse);
 
             // Audio Processing
             let targetAudioForce = 0;
@@ -450,10 +413,9 @@
                 
                 // Beat Detection: Pick a new random region to disperse
                 if (normBass > 0.65 && lastBassNorm <= 0.65) {
-                    // Adjusted coordinates for the new 3D scale
                     const randomX = (Math.random() - 0.5) * 80.0; 
                     const randomY = (Math.random() - 0.5) * 10.0;
-                    const randomRadius = Math.random() * 15.0 + 10.0; 
+                    const randomRadius = Math.random() * 20.0 + 15.0; 
 
                     material.uniforms.uAudioCenter.value.set(randomX, randomY);
                     material.uniforms.uAudioRadius.value = randomRadius;
@@ -476,6 +438,14 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Re-evaluate mobile status on resize
+            const wasMobile = isMobile;
+            const nowMobile = window.innerWidth < 768;
+            if (wasMobile !== nowMobile) {
+                // Optional: Could reload or re-init geometry here if needed, 
+                // but usually just updating scale is enough for orientation changes.
+            }
             updateScale();
         });
 
@@ -484,5 +454,4 @@
 
     </script>
 </body>
-</html>
 </html>
