@@ -2,456 +2,522 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A Thousand Islands</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- User's specified r183 Import Map -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.183.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.183.0/examples/jsm/"
-      }
-    }
-    </script>
-
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background-color: #000000;
-            color: #ffffff;
-            overflow: hidden;
+            background-color: #000;
+            color: #fff;
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            touch-action: none;
-        }
-
-        /* Use dvh (Dynamic Viewport Height) to fix mobile address bar issues */
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+            overflow: hidden;
             width: 100vw;
-            height: 100dvh; 
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 2.5s ease-in-out;
+            height: 100vh;
         }
 
+        /* UI Elements */
         #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100dvh;
+            width: 100%;
+            height: 100%;
             z-index: 10;
             pointer-events: none;
         }
 
-        .btn-container-top {
+        /* Logos */
+        .logo {
             position: absolute;
-            top: max(40px, env(safe-area-inset-top));
-            width: 100%;
-            display: flex;
-            justify-content: center;
+            font-weight: 700;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), transform 1.5s ease;
         }
 
-        .btn-container-bottom {
-            position: absolute;
-            bottom: max(40px, env(safe-area-inset-bottom));
-            width: 100%;
-            display: flex;
-            justify-content: center;
+        #logo-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            font-size: 5vw;
+            opacity: 1;
         }
 
-        /* Sophisticated Glassmorphism Button */
-        .glass-edge-btn {
-            pointer-events: auto;
-            position: relative;
-            background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12); 
-            border-radius: 50px;
-            padding: 12px 40px;
-            color: #ffffff;
-            font-size: 0.9rem;
-            font-weight: 400;
-            letter-spacing: 0.05em;
-            text-decoration: none;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            cursor: pointer;
-            
+        @media (max-width: 768px) {
+            #logo-center { font-size: 2.5rem; }
+        }
+
+        #logo-center.hidden {
             opacity: 0;
-            transform: translateY(15px);
-            transition: opacity 1.5s ease, transform 1.5s ease, background 0.3s ease;
-            
-            --mouse-x: 50%;
-            --mouse-y: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            pointer-events: none;
         }
 
-        .glass-edge-btn.visible {
+        #logo-corner {
+            top: 40px;
+            left: 40px;
+            font-size: 1.2rem;
+            opacity: 0;
+            transform: translateY(-15px);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            #logo-corner { top: 30px; left: 25px; font-size: 1rem; }
+        }
+
+        #logo-corner.active {
             opacity: 1;
             transform: translateY(0);
         }
 
-        .glass-edge-btn:hover {
-            background: rgba(255, 255, 255, 0.16);
+        /* Coming Soon Text */
+        #coming-soon {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
         }
 
-        /* Elegant White Tracking Edge */
-        .glass-edge-btn::before {
-            content: '';
+        #coming-soon.pulsing {
+            animation: text-pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes text-pulse {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        }
+
+        /* Base Button Styles */
+        .btn {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50px;
-            padding: 1.5px; 
-            background: radial-gradient(
-                70px circle at var(--mouse-x) var(--mouse-y), 
-                rgba(255, 255, 255, 0.9), 
-                rgba(255, 255, 255, 0.2) 40%,
-                transparent 80%
-            );
+            padding: 14px 32px;
+            border-radius: 999px; /* Perfect pill shape */
+            background: rgba(15, 15, 15, 0.5); /* Dark translucent glass */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            pointer-events: auto;
+            border: 1px solid transparent; 
+            outline: none;
+            transition: transform 0.3s ease, opacity 1s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Wake Up Button - Colored, Sharper Edge Light */
+        #btn-wake {
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #btn-wake:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        #btn-wake.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, 20px);
+        }
+
+        #btn-wake::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            padding: 1px; /* Thinner, sharper border */
+            background: linear-gradient(90deg, #3b82f6, #ef4444, #f59e0b, #3b82f6);
+            background-size: 300% 100%;
+            animation: border-flow 3s linear infinite;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+        }
+
+        #btn-wake::after {
+            content: "";
+            position: absolute;
+            inset: -1px; /* Tighter radius */
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.4), rgba(239, 68, 68, 0.4), rgba(245, 158, 11, 0.4), rgba(59, 130, 246, 0.4));
+            background-size: 300% 100%;
+            animation: border-flow 3s linear infinite, glow-pulse 2s ease-in-out infinite alternate;
+            z-index: -1;
+            filter: blur(3px); /* Much smaller blur radius */
+            pointer-events: none;
+        }
+
+        /* Contact Us Button - Subtle White Edge Light */
+        #btn-contact {
+            top: 30px;
+            right: 30px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+        }
+
+        @media (max-width: 768px) {
+            #btn-contact { top: 20px; right: 20px; padding: 12px 24px; font-size: 0.85rem; }
+        }
+
+        #btn-contact.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        #btn-contact::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            padding: 1px;
+            /* Subtle white/grey moving gradient */
+            background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.5), rgba(255,255,255,0.05));
+            background-size: 200% 100%;
+            animation: border-flow-contact 4s linear infinite;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Animations */
+        @keyframes border-flow {
+            0% { background-position: 0% 0; }
+            100% { background-position: 300% 0; }
+        }
+
+        @keyframes border-flow-contact {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes glow-pulse {
+            0% { opacity: 0.2; }
+            100% { opacity: 0.6; }
+        }
+
+        /* 3D Canvas */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2.5s ease;
+        }
+
+        #canvas-container.active {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
-
     <div id="ui-layer">
-        <div class="btn-container-top">
-            <button id="wake-btn" class="glass-edge-btn">
-                <span>Wake up</span>
-            </button>
-        </div>
-
-        <div class="btn-container-bottom">
-            <a id="contact-btn" href="mailto:contact@athousandislands.tech" class="glass-edge-btn">
-                <span>Contact for info</span>
-            </a>
-        </div>
+        <div id="logo-center" class="logo">A Thousand Islands</div>
+        <div id="logo-corner" class="logo">A Thousand Islands</div>
+        <div id="coming-soon">Coming Soon</div>
+        <button id="btn-wake" class="btn">Wake Up</button>
+        <button id="btn-contact" class="btn">Contact us</button>
     </div>
 
+    <div id="canvas-container"></div>
+
+    <!-- Import Three.js -->
     <script type="module">
-        import * as THREE from 'three';
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-        // --- MOBILE OPTIMIZATION ---
-        const isMobile = window.innerWidth < 768;
+        // --- UI Elements ---
+        const logoCenter = document.getElementById('logo-center');
+        const logoCorner = document.getElementById('logo-corner');
+        const comingSoon = document.getElementById('coming-soon');
+        const btnWake = document.getElementById('btn-wake');
+        const btnContact = document.getElementById('btn-contact');
+        const canvasContainer = document.getElementById('canvas-container');
 
-        // --- CONFIGURATION ---
-        const CONFIG = {
-            text: "A Thousand Islands",
-            pixelSize: 0.02, // Requested size
-            // Dynamically adjust density: lower density (higher number) on mobile for performance
-            density: isMobile ? 3.5 : 2, 
-            colors: { bg: 0x000000, particle: 0xffffff }
-        };
+        // --- State ---
+        let isActive = false;
+        let audioContext, analyser, dataArray;
+        let audioStream = null;
+        let resetTimeout, finalResetTimeout;
 
-        // --- THREE.JS SETUP ---
-        const container = document.getElementById('canvas-container');
+        // --- Three.js Setup ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(CONFIG.colors.bg);
-        
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.z = 120;
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 6;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
+        canvasContainer.appendChild(renderer.domElement);
 
-        // --- TEXT TO PIXELS (Safe Canvas Size + Stochastic Anti-Aliasing) ---
-        function getTextCoordinates() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            
-            canvas.width = 2048; 
-            canvas.height = 512;
-
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff';
-            
-            ctx.font = 'bold 180px Helvetica, Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            ctx.fillText(CONFIG.text, canvas.width / 2, canvas.height / 2);
-
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            const coordinates = [];
-            
-            for (let y = 0; y < canvas.height; y += CONFIG.density) {
-                for (let x = 0; x < canvas.width; x += CONFIG.density) {
-                    const index = (y * canvas.width + x) * 4;
-                    if (imgData[index] > 128) {
-                        const jitterX = (Math.random() - 0.5) * 1.5;
-                        const jitterY = (Math.random() - 0.5) * 1.5;
-                        
-                        const posX = (x + jitterX - canvas.width / 2) * 0.05;
-                        const posY = -(y + jitterY - canvas.height / 2) * 0.05;
-                        coordinates.push({ x: posX, y: posY, z: 0 });
-                    }
-                }
-            }
-            return coordinates;
-        }
-
-        const textCoords = getTextCoordinates();
-        const particleCount = textCoords.length;
-        
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const randoms = new Float32Array(particleCount * 3); 
-
-        for (let i = 0; i < particleCount; i++) {
-            const coord = textCoords[i];
-            
-            positions[i * 3] = coord.x;
-            positions[i * 3 + 1] = coord.y;
-            positions[i * 3 + 2] = 0;
-
-            // Generate random scatter directions
-            randoms[i * 3] = (Math.random() - 0.5) * 2.0;
-            randoms[i * 3 + 1] = (Math.random() - 0.5) * 2.0;
-            randoms[i * 3 + 2] = (Math.random() - 0.5) * 2.0;
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
-
-        // --- SHADERS (GPU Heavy Lifting) ---
+        // --- Shader Material ---
         const vertexShader = `
-            uniform float uPixelSize;
-            
-            // Audio Uniforms
-            uniform float uAudioForce;
-            uniform vec2 uAudioCenter;
-            uniform float uAudioRadius;
-            
-            attribute vec3 aRandom;
+            uniform float uTime;
+            uniform float uAudio;
+            varying vec3 vPos;
+
+            vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+            vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+            float snoise(vec3 v){ 
+                const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+                const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+                vec3 i  = floor(v + dot(v, C.yyy) );
+                vec3 x0 = v - i + dot(i, C.xxx) ;
+                vec3 g = step(x0.yzx, x0.xyz);
+                vec3 l = 1.0 - g;
+                vec3 i1 = min( g.xyz, l.zxy );
+                vec3 i2 = max( g.xyz, l.zxy );
+                vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+                vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+                vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+                i = mod(i, 289.0 ); 
+                vec4 p = permute( permute( permute( 
+                            i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                        + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+                        + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+                float n_ = 1.0/7.0;
+                vec3  ns = n_ * D.wyz - D.xzx;
+                vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
+                vec4 x_ = floor(j * ns.z);
+                vec4 y_ = floor(j - 7.0 * x_ );
+                vec4 x = x_ *ns.x + ns.yyyy;
+                vec4 y = y_ *ns.x + ns.yyyy;
+                vec4 h = 1.0 - abs(x) - abs(y);
+                vec4 b0 = vec4( x.xy, y.xy );
+                vec4 b1 = vec4( x.zw, y.zw );
+                vec4 s0 = floor(b0)*2.0 + 1.0;
+                vec4 s1 = floor(b1)*2.0 + 1.0;
+                vec4 sh = -step(h, vec4(0.0));
+                vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+                vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+                vec3 p0 = vec3(a0.xy,h.x);
+                vec3 p1 = vec3(a0.zw,h.y);
+                vec3 p2 = vec3(a1.xy,h.z);
+                vec3 p3 = vec3(a1.zw,h.w);
+                vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                p0 *= norm.x;
+                p1 *= norm.y;
+                p2 *= norm.z;
+                p3 *= norm.w;
+                vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                m = m * m;
+                return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+            }
 
             void main() {
-                vec3 targetPos = position;
-                
-                // Audio Interaction (Dramatic Regional Force Field)
-                vec3 audioDisplacement = vec3(0.0);
-                if (uAudioForce > 0.0) {
-                    float distToAudio = distance(targetPos.xy, uAudioCenter);
-                    float audioRegionForce = smoothstep(uAudioRadius, 0.0, distToAudio);
-                    
-                    if (audioRegionForce > 0.0) {
-                        vec2 pushDir = normalize(targetPos.xy - uAudioCenter + vec2(0.001)); 
-                        
-                        // DRAMATIC SCATTER: Massively increased multipliers
-                        vec3 scatter = aRandom * 60.0; 
-                        audioDisplacement = (vec3(pushDir * 20.0, 0.0) + scatter) * uAudioForce * audioRegionForce;
-                    }
-                }
+                vPos = position;
+                vec3 pos = position;
+                vec3 normal = normalize(pos);
 
-                targetPos += audioDisplacement;
+                float noiseFreq = 0.7; 
+                float noiseAmp = 0.08 + (uAudio * 0.3); 
+                vec3 noisePos = vec3(pos.x * noiseFreq + uTime * 0.2, pos.y * noiseFreq + uTime * 0.3, pos.z * noiseFreq);
+                float noise = snoise(noisePos) * noiseAmp;
 
-                vec4 mvPosition = modelViewMatrix * vec4(targetPos, 1.0);
+                pos += normal * noise;
+
+                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
-                
-                // Scale point size to ensure perfect overlap and solid text appearance
-                gl_PointSize = (uPixelSize * 80.0) * (800.0 / -mvPosition.z);
+
+                gl_PointSize = 2.0 * (10.0 / -mvPosition.z);
             }
         `;
 
         const fragmentShader = `
+            varying vec3 vPos;
+
             void main() {
-                vec2 xy = gl_PointCoord.xy - vec2(0.5);
-                float ll = length(xy);
-                if (ll > 0.5) discard;
-                
-                // Soft edge for perfect blending
-                float alpha = smoothstep(0.5, 0.3, ll);
-                gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+                vec2 coord = gl_PointCoord - vec2(0.5);
+                if (length(coord) > 0.5) discard;
+
+                vec3 color = vec3(1.0, 1.0, 1.0);
+                float alpha = smoothstep(0.5, 0.1, length(coord));
+
+                gl_FragColor = vec4(color, alpha * 0.8);
             }
         `;
 
+        // --- Random Spherical Distribution ---
+        const particleCount = 12000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for(let i = 0; i < particleCount; i++) {
+            const u = Math.random();
+            const v = Math.random();
+            const theta = u * 2.0 * Math.PI;
+            const phi = Math.acos(2.0 * v - 1.0);
+            const r = 1.1; 
+
+            positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+            positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+            positions[i*3+2] = r * Math.cos(phi);
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
         const material = new THREE.ShaderMaterial({
             vertexShader,
             fragmentShader,
             uniforms: {
-                uPixelSize: { value: CONFIG.pixelSize },
-                uAudioForce: { value: 0.0 },
-                uAudioCenter: { value: new THREE.Vector2(0, 0) },
-                uAudioRadius: { value: 20.0 }
+                uTime: { value: 0 },
+                uAudio: { value: 0 }
             },
             transparent: true,
             depthWrite: false,
-            blending: THREE.NormalBlending 
+            blending: THREE.AdditiveBlending
         });
 
-        const particleSystem = new THREE.Points(geometry, material);
-        scene.add(particleSystem);
+        const orb = new THREE.Points(geometry, material);
+        scene.add(orb);
 
-        // Responsive scaling (Slightly bigger across all devices)
-        function updateScale() {
-            if (window.innerWidth < 768) {
-                particleSystem.scale.set(0.5, 0.5, 0.5); // Was 0.4
-            } else if (window.innerWidth < 1024) {
-                particleSystem.scale.set(1.0, 1.0, 1.0); // Was 0.8
-            } else {
-                particleSystem.scale.set(1.8, 1.8, 1.8); // Was 1.5
-            }
-        }
-        updateScale();
-
-        // --- AUDIO SYSTEM (Wake / Sleep Logic) ---
-        let audioContext, analyser, dataArray;
-        let isAudioActive = false;
-        let currentAudioForce = 0;
-        let lastBassNorm = 0;
-        let localAudioStream = null;
-
-        const wakeBtn = document.getElementById('wake-btn');
-        const wakeText = wakeBtn.querySelector('span');
-
-        async function toggleAudio() {
-            if (!isAudioActive) {
-                // WAKE UP
-                try {
-                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const source = audioContext.createMediaStreamSource(localAudioStream);
-                    analyser = audioContext.createAnalyser();
-                    analyser.fftSize = 256;
-                    source.connect(analyser);
-                    dataArray = new Uint8Array(analyser.frequencyBinCount);
-                    
-                    isAudioActive = true;
-                    wakeText.innerText = "Sleep";
-                } catch (err) {
-                    console.warn("Microphone access denied.", err);
-                }
-            } else {
-                // SLEEP
-                if (localAudioStream) {
-                    localAudioStream.getTracks().forEach(track => track.stop());
-                }
-                if (audioContext) {
-                    audioContext.close();
-                }
+        // --- Audio Setup ---
+        async function setupAudio() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
                 
-                isAudioActive = false;
-                wakeText.innerText = "Wake up";
+                const source = audioContext.createMediaStreamSource(audioStream);
+                source.connect(analyser);
                 
-                // Force particles to settle immediately
-                material.uniforms.uAudioForce.value = 0;
-                currentAudioForce = 0;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            } catch (err) {
+                console.log("Microphone access denied. Running idle animation.");
             }
         }
 
-        wakeBtn.addEventListener('click', toggleAudio);
-
-        // --- INTERACTION (Button Edge Lighting Only) ---
-        const buttons = document.querySelectorAll('.glass-edge-btn');
-
-        function onMove(event) {
-            const x = event.touches ? event.touches[0].clientX : event.clientX;
-            const y = event.touches ? event.touches[0].clientY : event.clientY;
-            
-            // Button Edge Lighting
-            buttons.forEach(btn => {
-                const rect = btn.getBoundingClientRect();
-                const btnX = x - rect.left;
-                const btnY = y - rect.top;
-                btn.style.setProperty('--mouse-x', `${btnX}px`);
-                btn.style.setProperty('--mouse-y', `${btnY}px`);
-            });
-        }
-        
-        function onEnd() {
-            buttons.forEach(btn => {
-                btn.style.setProperty('--mouse-x', `50%`);
-                btn.style.setProperty('--mouse-y', `50%`);
-            });
+        function stopAudio() {
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
         }
 
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('touchmove', onMove);
-        window.addEventListener('touchend', onEnd);
-        window.addEventListener('mouseleave', onEnd);
+        // --- Interaction Logic ---
+        btnWake.addEventListener('click', () => {
+            if (isActive) return;
+            isActive = true;
 
-        // --- ANIMATION CHOREOGRAPHY ---
-        setTimeout(() => {
-            document.getElementById('canvas-container').style.opacity = 1;
+            clearTimeout(resetTimeout);
+            clearTimeout(finalResetTimeout);
+            comingSoon.classList.remove('pulsing');
+
+            // UI Transitions
+            logoCenter.classList.add('hidden');
+            btnWake.classList.add('hidden');
+            canvasContainer.classList.add('active');
             
-            // Wait 3 seconds to ensure logo is fully settled before showing buttons
+            // Contact button fades in and stays active permanently
+            btnContact.classList.add('active');
+
+            // Fade in corner logo slightly after center fades out
             setTimeout(() => {
-                document.getElementById('wake-btn').classList.add('visible');
-                document.getElementById('contact-btn').classList.add('visible');
-            }, 3000); 
-        }, 200);
+                if(isActive) logoCorner.classList.add('active');
+            }, 800);
+
+            // Start Audio & Animation
+            setupAudio();
+
+            // Set 15 second reset timer
+            resetTimeout = setTimeout(triggerEndingSequence, 15000);
+        });
+
+        function triggerEndingSequence() {
+            // Fade out orb and corner logo (Contact button remains)
+            canvasContainer.classList.remove('active');
+            logoCorner.classList.remove('active');
+            
+            // Fade in Center Logo and Coming Soon
+            setTimeout(() => {
+                logoCenter.classList.remove('hidden');
+                comingSoon.classList.add('pulsing');
+            }, 1000);
+
+            stopAudio();
+
+            // Let it pulse for 5 seconds, then fully reset
+            finalResetTimeout = setTimeout(() => {
+                comingSoon.classList.remove('pulsing');
+                btnWake.classList.remove('hidden');
+                isActive = false;
+            }, 6000);
+        }
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Audio Processing
-            let targetAudioForce = 0;
-            if (isAudioActive && analyser) {
+            const elapsedTime = clock.getElapsedTime();
+            material.uniforms.uTime.value = elapsedTime;
+
+            orb.rotation.y = elapsedTime * 0.08;
+            orb.rotation.z = elapsedTime * 0.04;
+
+            if (isActive && analyser && dataArray) {
                 analyser.getByteFrequencyData(dataArray);
                 
-                // Focus on bass frequencies
-                let bassSum = 0;
-                for(let i = 0; i < 8; i++) {
-                    bassSum += dataArray[i];
+                let sum = 0;
+                const bassRange = 20; 
+                for (let i = 0; i < bassRange; i++) {
+                    sum += dataArray[i];
                 }
-                let bassAvg = bassSum / 8.0;
-                let normBass = bassAvg / 255.0;
+                let average = sum / bassRange;
                 
-                // Beat Detection: Pick a new random region to disperse
-                if (normBass > 0.65 && lastBassNorm <= 0.65) {
-                    const randomX = (Math.random() - 0.5) * 80.0; 
-                    const randomY = (Math.random() - 0.5) * 10.0;
-                    const randomRadius = Math.random() * 20.0 + 15.0; 
-
-                    material.uniforms.uAudioCenter.value.set(randomX, randomY);
-                    material.uniforms.uAudioRadius.value = randomRadius;
-                }
-                lastBassNorm = normBass;
-
-                // Apply curve for punchy reaction
-                targetAudioForce = Math.pow(normBass, 4.0) * 2.5; 
+                let audioValue = average / 255;
+                material.uniforms.uAudio.value += (audioValue - material.uniforms.uAudio.value) * 0.1; 
+            } else {
+                material.uniforms.uAudio.value += (0 - material.uniforms.uAudio.value) * 0.05;
             }
-
-            // Slower snap back (0.03) for a lingering, floaty settle
-            currentAudioForce += (targetAudioForce - currentAudioForce) * 0.03;
-            material.uniforms.uAudioForce.value = currentAudioForce;
 
             renderer.render(scene, camera);
         }
 
-        // --- RESIZE HANDLER ---
+        animate();
+
+        // --- Resize Handler ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            // Re-evaluate mobile status on resize
-            const wasMobile = isMobile;
-            const nowMobile = window.innerWidth < 768;
-            if (wasMobile !== nowMobile) {
-                // Optional: Could reload or re-init geometry here if needed, 
-                // but usually just updating scale is enough for orientation changes.
-            }
-            updateScale();
         });
-
-        // Start loop
-        animate();
-
     </script>
 </body>
 </html>
