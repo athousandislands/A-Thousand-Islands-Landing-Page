@@ -1,0 +1,28 @@
+{
+  "name": "a-thousand-islands-landing-page",
+  "version": "1.0.0",
+  "description": "A Thousand Islands - Interactive Landing Page",
+  "type": "module",
+  "scripts": {
+    "dev": "npx http-server -p 3000",
+    "build": "echo 'Static HTML - No build required'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/athousandislands/A-Thousand-Islands-Landing-Page.git"
+  },
+  "keywords": [
+    "landing-page",
+    "interactive",
+    "three.js"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/athousandislands/A-Thousand-Islands-Landing-Page/issues"
+  },
+  "homepage": "https://github.com/athousandislands/A-Thousand-Islands-Landing-Page#readme",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
