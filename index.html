@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A Thousand Islands</title>
     <style>
+        /* --- CUSTOM FONT SETUP --- */
+        @font-face {
+            font-family: 'HelveticaNeueCustom';
+            /* Change 'HelveticaNeue.ttf' to the exact filename you extracted from your ZIP */
+            src: url('HelveticaNeue.ttf') format('truetype'); 
+            font-weight: 400;
+            font-style: normal;
+        }
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -15,7 +24,8 @@
             padding: 0;
             background-color: #000;
             color: #fff;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            /* Fallback stack in case the custom font doesn't load */
+            font-family: 'HelveticaNeueCustom', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             overflow: hidden;
             width: 100vw;
             height: 100vh;
@@ -35,8 +45,9 @@
         /* Logos */
         .logo {
             position: absolute;
-            font-weight: 700;
-            letter-spacing: -1px;
+            font-family: 'HelveticaNeueCustom', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 400; /* Adjusted to 400 to match your reference image perfectly */
+            letter-spacing: -0.5px; /* Classic Helvetica tight tracking */
             white-space: nowrap;
             transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), transform 1.5s ease;
         }
