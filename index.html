@@ -2,555 +2,2984 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>A Thousand Islands</title>
+
+    <!-- P3-1: cannot self-host/bundle in this environment (no network access to fetch packages).
+         Interim step per audit: preconnect to both CDN origins, versions pinned. -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Modern Three.js r183 Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.183.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.183.0/examples/jsm/"
+            }
+        }
+    </script>
+
     <style>
-        /* --- CUSTOM FONT SETUP --- */
-        @font-face {
-            font-family: 'HelveticaNeueCustom';
-            /* Change 'HelveticaNeue.ttf' to the exact filename you extracted from your ZIP */
-            src: url('HelveticaNeue.ttf') format('truetype'); 
-            font-weight: 400;
-            font-style: normal;
+        /*
+        ==========================================================================
+        MODULE INDEX - CSS
+        ==========================================================================
+        1. Configuration & Variables
+        2. Base & Reset
+        3. Shared Components & Typography
+        4. Navigation (Smart Glass Header)
+        5. Home Section
+        6. Echo Section
+        7. Pulse Section
+        8. Contact Section
+        9. Legal Modal
+        10. Mobile Optimizations
+        11. Reduced Motion / Accessibility (added)
+
+        Breakpoint tokens (kept identical in JS as CONFIG.breakpoints so CSS and
+        JS never diverge again — see P3-2 in the audit):
+          mobile-max : 768px
+          desktop-min: 1000px
+        ========================================================================== */
+
+        /* ==========================================================================
+           1. CONFIGURATION & VARIABLES
+           ========================================================================== */
+        :root {
+            --bg-color: #000000;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+            --gradient-pulse: linear-gradient(90deg,
+                #00E5FF 0%, #2962FF 10%, #7A00FF 20%, #FF00AA 30%, #FF3B30 40%, #FF9F0A 50%,
+                #00E5FF 50%, #2962FF 60%, #7A00FF 70%, #FF00AA 80%, #FF3B30 90%, #FF9F0A 100%
+            );
+            --gradient-siri: linear-gradient(90deg,
+                #00C7FF 0%, #7A00FF 12%, #FF007F 26%, #FF3B30 40%, #FF9F0A 50%,
+                #00C7FF 60%, #7A00FF 72%, #FF007F 84%, #FF3B30 94%, #FF9F0A 100%
+            );
+            --gradient-echo: linear-gradient(90deg,
+                #8a0000, #e60000, #ff4500, #ff8c00, #ffb300, #ff4500, #e60000, #8a0000, #4a0000
+            );
+
+            --nav-padding-desktop: 1.2rem 2rem;
+            --section-padding-desktop: 14vh 1.5rem 4rem 1.5rem;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* ==========================================================================
+           2. BASE & RESET
+           ========================================================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            /* Fallback stack in case the custom font doesn't load */
-            font-family: 'HelveticaNeueCustom', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            overflow: hidden;
-            width: 100vw;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             height: 100vh;
+            height: 100dvh; /* P0-6: dvh accounts for mobile browser chrome */
+            overflow-y: hidden;
         }
 
-        /* UI Elements */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
+        /* ==========================================================================
+           3. SHARED COMPONENTS & TYPOGRAPHY
+           ========================================================================== */
+        .section-intro {
+            font-size: clamp(1.8rem, 4.2vw, 3.36rem);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+            text-align: center;
         }
 
-        /* Logos */
-        .logo {
-            position: absolute;
-            font-family: 'HelveticaNeueCustom', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-weight: 400; /* Adjusted to 400 to match your reference image perfectly */
-            letter-spacing: -0.5px; /* Classic Helvetica tight tracking */
-            white-space: nowrap;
-            transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), transform 1.5s ease;
+        .section-title {
+            font-size: clamp(3.07rem, 10.56vw, 9.12rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: clamp(0.2rem, 0.8vw, 0.8rem);
+            text-align: center;
+            line-height: 1.1;
         }
 
-        #logo-center {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            font-size: 5vw;
-            opacity: 0; /* Starts hidden for initial fade-in */
-            pointer-events: none;
+        @media (min-width: 1000px) {
+            .section-intro { font-size: clamp(1.8rem, 3vw, 2.64rem); }
+            .section-title { font-size: clamp(3.07rem, 7.8vw, 7.2rem); }
         }
 
-        @media (max-width: 768px) {
-            #logo-center { font-size: 2.5rem; }
+        .text-muted { color: var(--text-muted); }
+        .text-white { color: var(--text-main); }
+
+        /* Tap/Scroll Icon (now a shared external asset — see P0-1 asset map) */
+        .tap-icon-container {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 96px; height: auto; z-index: 10; opacity: 0;
+            pointer-events: none; transition: opacity 0.6s ease;
+            /* P3-3: keep tap icons clear of home-indicator / gesture areas on notched phones */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .tap-icon-svg { width: 100%; height: auto; display: block; animation: tap-pulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes tap-pulse {
+            0% { transform: scale(0.95); opacity: 0.4; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+            100% { transform: scale(0.95); opacity: 0.4; }
         }
 
-        #logo-center.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+        /* Glass Button Component */
+        .glass-btn {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s ease; text-decoration: none; position: relative;
         }
-
-        #logo-corner {
-            top: 40px;
-            left: 40px;
-            font-size: 1.2rem;
-            opacity: 0;
-            transform: translateY(-15px);
-            pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-            #logo-corner { top: 30px; left: 25px; font-size: 1rem; }
-        }
-
-        #logo-corner.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Coming Soon Text - Enhanced Glow */
-        #coming-soon {
-            position: absolute;
-            top: 60%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.95rem;
-            font-weight: 300;
-            letter-spacing: 1px;
-            color: rgba(255, 255, 255, 0.8);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease;
-        }
-
-        #coming-soon.pulsing {
-            animation: text-pulse 2s infinite ease-in-out;
-        }
-
-        @keyframes text-pulse {
-            0%, 100% { 
-                opacity: 0.3; 
-                text-shadow: 0 0 5px rgba(255,255,255,0.2); 
-            }
-            50% { 
-                opacity: 1; 
-                text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 0 40px rgba(255,255,255,0.5); 
-            }
-        }
-
-        /* Wake Up Button */
-        .btn {
-            position: absolute;
-            padding: 14px 32px;
-            border-radius: 999px; 
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.95rem;
-            font-weight: 300; 
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            pointer-events: auto;
-            outline: none;
-            transition: transform 0.3s ease, opacity 1.5s ease;
-        }
-
-        #btn-wake {
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: rgba(15, 15, 15, 0.5); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid transparent; 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            opacity: 0; /* Starts hidden for initial fade-in */
-            pointer-events: none;
-        }
-
-        #btn-wake.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-            pointer-events: auto;
-        }
-
-        #btn-wake.show:active {
-            transform: translateX(-50%) translateY(0) scale(0.95);
-        }
-
-        /* Colored Edge */
-        #btn-wake::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 999px;
-            padding: 1px; 
-            background: linear-gradient(90deg, #3b82f6, #ef4444, #f59e0b, #3b82f6);
-            background-size: 300% 100%;
-            animation: border-flow 3s linear infinite;
+        .glass-btn::before {
+            content: ""; position: absolute; inset: -1px; border-radius: 50%; padding: 1px;
+            background: radial-gradient(circle 35px at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.8), transparent 100%);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
+            -webkit-mask-composite: xor; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .glass-btn:hover::before { opacity: 1; }
+            .glass-btn:hover svg { stroke: var(--text-main); }
+        }
+        .glass-btn:active { background: rgba(255, 255, 255, 0.12); transform: scale(0.95); }
+        .glass-btn:active svg { stroke: var(--text-main); }
+
+        .btn-tooltip {
+            position: absolute; top: -45px; background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            color: #fff; opacity: 0; transform: translateY(10px); transition: all 0.3s ease;
+            pointer-events: none; border: 1px solid rgba(255, 255, 255, 0.15); letter-spacing: 0.02em;
+        }
+        @media (hover: hover) and (pointer: fine) { .glass-btn:hover .btn-tooltip { opacity: 1; transform: translateY(0); } }
+
+        /* P2-8: visible "enable motion" prompt for Echo gyro parallax, shown on Echo entry
+           instead of hijacking the very first tap anywhere on the site. */
+        .motion-prompt-btn {
+            position: fixed; left: 50%; bottom: calc(6% + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            z-index: 40; display: none;
+            padding: 0.7rem 1.4rem; border-radius: 999px;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.15); color: var(--text-main);
+            font-family: var(--font-family); font-size: 0.95rem; letter-spacing: 0.01em;
+            cursor: pointer;
+        }
+        .motion-prompt-btn.is-visible { display: block; }
+
+        /* ==========================================================================
+           4. NAVIGATION (SMART GLASS HEADER)
+           ========================================================================== */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; padding: var(--nav-padding-desktop);
+            padding-top: max(1.2rem, env(safe-area-inset-top, 0px)); /* P3-3 */
+            z-index: 1000; opacity: 0;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.4s ease; pointer-events: none;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        header.is-visible { opacity: 1; pointer-events: auto; }
+        header.menu-open { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+
+        /* P3-4: .logo / .nav-link / .mobile-nav-link are now <button> elements for real
+           keyboard/focus affordance (a bare <a> with no href is not focusable). Reset
+           button chrome so the visual design is unchanged. */
+        .logo, .nav-link, .mobile-nav-link {
+            background: none; border: none; font: inherit; -webkit-appearance: none; appearance: none;
+        }
+        .logo {
+            font-size: 1.2rem; font-weight: 500; color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 0.01em; text-decoration: none; cursor: pointer;
+            transition: color 0.3s ease, opacity 0.3s ease; position: relative; z-index: 1001;
+        }
+        .logo:hover { color: var(--text-main); opacity: 1; }
+
+        .desktop-nav { display: flex; gap: 2rem; align-items: center; }
+        .nav-link { color: var(--text-main); text-decoration: none; font-size: 1.2rem; font-weight: 500; opacity: 0.8; transition: opacity 0.3s ease; cursor: pointer; }
+        .nav-link:hover { opacity: 1; }
+        .logo:focus-visible, .nav-link:focus-visible, .mobile-nav-link:focus-visible, .hamburger:focus-visible {
+            outline: 2px solid rgba(255,255,255,0.8); outline-offset: 3px; border-radius: 4px;
         }
 
-        /* Subtle Glow - Activates on Hover/Click */
-        #btn-wake::after {
-            content: "";
-            position: absolute;
-            inset: -1px; 
-            border-radius: 999px;
-            background: linear-gradient(90deg, #3b82f6, #ef4444, #f59e0b, #3b82f6);
+        .hamburger { display: none; background: none; border: none; cursor: pointer; width: 28px; height: 18px; position: relative; z-index: 1001; padding: 0; }
+        .hamburger .line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--text-main); border-radius: 2px; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease; }
+        .hamburger .line:nth-child(1) { top: 0; }
+        .hamburger .line:nth-child(2) { top: 50%; transform: translateY(-50%); }
+        .hamburger .line:nth-child(3) { bottom: 0; }
+        .hamburger.is-active .line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+        .hamburger.is-active .line:nth-child(2) { opacity: 0; }
+        .hamburger.is-active .line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+        .mobile-menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh;
+            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+            z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; align-items: center; padding: 2rem;
+            padding-top: max(2rem, env(safe-area-inset-top, 0px));
+            padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-menu-overlay.is-open { opacity: 1; pointer-events: auto; }
+        .mobile-nav { display: flex; flex-direction: column; gap: 2.5rem; width: 100%; }
+        .mobile-nav-link {
+            color: var(--text-main); text-decoration: none; font-size: 2.5rem; font-weight: 500;
+            letter-spacing: -0.02em; opacity: 0; transform: translateY(20px); text-align: left;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+        }
+        .mobile-menu-overlay.is-open .mobile-nav-link { opacity: 1; transform: translateY(0); }
+        .mobile-menu-overlay.is-open .mobile-nav-link:nth-child(1) { transition-delay: 0.15s; }
+        .mobile-menu-overlay.is-open .mobile-nav-link:nth-child(2) { transition-delay: 0.25s; }
+        .mobile-menu-overlay.is-open .mobile-nav-link:nth-child(3) { transition-delay: 0.35s; }
+        .mobile-menu-overlay.is-open .mobile-nav-link:nth-child(4) { transition-delay: 0.45s; }
+        .mobile-menu-overlay.is-open .mobile-nav-link:nth-child(5) { transition-delay: 0.55s; }
+
+        /* ==========================================================================
+           5. HOME SECTION
+           ========================================================================== */
+        #home-view { display: flex; width: 100%; height: 100vh; height: 100dvh; background: var(--bg-color); justify-content: center; align-items: center; overflow: hidden; position: relative; }
+
+        /* Scroll-driven homepage indicator. Outer element owns the one-time entrance
+           (fade in + slight scale up); inner element owns the slow, continuous pulse,
+           kept separate so the two animations never fight over the opacity property. */
+        .home-scroll-indicator {
+            position: absolute; left: 50%; bottom: calc(13% + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%) translateY(8px) scale(0.94);
+            z-index: 10; opacity: 0; pointer-events: none;
+            transition: opacity 1s cubic-bezier(0.25, 1, 0.5, 1), transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .home-scroll-indicator.is-visible { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        .home-scroll-indicator-inner {
+            display: inline-block;
+            font-family: var(--font-family); font-weight: 400;
+            font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-main);
+            animation: homeScrollPulse 3.6s infinite ease-in-out;
+        }
+        @keyframes homeScrollPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+
+        #home-reveal-content {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20; opacity: 0; pointer-events: none; gap: 2.5rem; width: 100%; padding: 0 1.5rem;
+        }
+        #home-reveal-content.is-visible { pointer-events: auto; }
+        .reveal-text { text-align: center; color: var(--text-main); transform: scale(0.85); opacity: 0; white-space: nowrap; }
+        .reveal-text .line1 { font-size: clamp(1.2rem, 3vw, 2.5rem); font-weight: 400; margin-bottom: 0.8rem; letter-spacing: 0.01em; }
+        .reveal-text .line2 { font-size: clamp(1.4rem, 4.5vw, 3.5rem); font-weight: 400; letter-spacing: -0.01em; }
+        .home-buttons-container { display: flex; gap: 1.5rem; align-items: center; }
+
+        #home-echo-btn svg { width: 28px; height: 28px; fill: var(--text-muted); transition: all 0.3s ease; animation: echoIconBreathe 3s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes echoIconBreathe {
+            0%, 100% { fill: var(--text-muted); transform: scale(1); filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
+            50% { fill: var(--text-main); transform: scale(1.3); filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+        }
+
+        .morph-dots { width: 28px; height: 28px; animation: colorChange 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        #home-pulse-btn:hover .morph-dots { fill: var(--text-main) !important; animation: none !important; }
+        .dots-group { transform-origin: 12px 12px; animation: rotateGroup 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .dot-1 { animation: dot1 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .dot-2 { animation: dot2 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .dot-3 { animation: dot3 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .dot-4 { animation: dot4 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .dot-5 { animation: dot5 4s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes colorChange { 0%, 9% { fill: var(--text-muted); } 10%, 40% { fill: var(--text-main); } 41%, 100% { fill: var(--text-muted); } }
+        @keyframes rotateGroup { 0%, 10% { transform: rotate(0deg); } 40%, 100% { transform: rotate(180deg); } }
+        @keyframes dot1 { 0%, 50%, 100% { transform: translate(0, 0); } 10%, 40% { transform: translate(0px, -9.5px); } }
+        @keyframes dot2 { 0%, 50%, 100% { transform: translate(0, 0); } 10%, 40% { transform: translate(9.03px, -2.94px); } }
+        @keyframes dot3 { 0%, 50%, 100% { transform: translate(0, 0); } 10%, 40% { transform: translate(5.58px, 7.68px); } }
+        @keyframes dot4 { 0%, 50%, 100% { transform: translate(0, 0); } 10%, 40% { transform: translate(-5.58px, 7.68px); } }
+        @keyframes dot5 { 0%, 50%, 100% { transform: translate(0, 0); } 10%, 40% { transform: translate(-9.03px, -2.94px); } }
+
+        /* ==========================================================================
+           6. ECHO SECTION
+           ========================================================================== */
+        #echo-view { display: none; width: 100%; position: relative; }
+        #echo-scroll-indicator { bottom: 15%; top: auto; }
+
+        #echo-landing-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; will-change: transform, opacity; }
+        #echo-landing-ui { position: absolute; top: 14vh; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .echo-text-line { opacity: 0; transform: translateY(15px); transition: opacity 0.78s ease-out, transform 0.78s ease-out; text-align: center; margin: 0; white-space: nowrap; }
+        .echo-text-line.visible { opacity: 1; transform: translateY(0); }
+        #echo-title-text {
+            background: var(--gradient-echo);
             background-size: 300% 100%;
-            animation: border-flow 3s linear infinite;
-            z-index: -1;
-            filter: blur(2px); 
-            opacity: 0.15; 
-            transition: opacity 0.3s ease, filter 0.3s ease;
-            pointer-events: none;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .echo-flow-gradient { animation: echoFlowGradientAnim 3.5s ease-out forwards; }
+        @keyframes echoFlowGradientAnim { 0% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        #echo-hero-video-wrapper {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100vw; height: 100vh; height: 100dvh; display: flex; justify-content: center; align-items: center;
+            z-index: 2; opacity: 0; pointer-events: none; will-change: opacity;
+        }
+        #echo-hero-video {
+            width: 100vw; height: auto; max-height: 100vh; max-height: 100dvh; object-fit: contain; display: block;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 3%, rgba(0,0,0,0.6) 13%, black 26%, black 74%, rgba(0,0,0,0.6) 87%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 3%, rgba(0,0,0,0.6) 13%, black 26%, black 74%, rgba(0,0,0,0.6) 87%, transparent 100%);
+            border-radius: 4vw; cursor: pointer; background: #050505;
+        }
+        /* P2-10: portrait framing — a 16:9 source at full viewport width is tiny in a tall
+           viewport. In portrait we let it grow against height instead of width so it reads
+           as the section's centrepiece rather than a strip. */
+        @media (orientation: portrait) and (max-width: 768px) {
+            #echo-hero-video { width: auto; height: 62vh; height: 62dvh; max-width: 94vw; }
         }
 
-        @media (hover: hover) {
-            #btn-wake:hover::after {
-                opacity: 0.6;
-                filter: blur(4px);
+        .echo-hero-controls { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+        #echo-hero-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; }
+        #echo-hero-play-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+        #echo-mid-text-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 4; opacity: 0; pointer-events: none; will-change: opacity, transform; }
+        #echo-mid-text { color: var(--text-main); font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 500; letter-spacing: -0.02em; margin: 0; line-height: 1.15; }
+
+        #echo-outro-text-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 4; opacity: 0; pointer-events: none; will-change: opacity; }
+        #echo-outro-text {
+            color: var(--text-main);
+            font-size: clamp(1.4rem, 6.3vw, 5.5rem);
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin: 0;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+        @media (min-width: 768px) {
+            #echo-outro-text {
+                font-size: clamp(1rem, 4.5vw, 5.5rem);
             }
         }
 
-        #btn-wake:active::after {
-            opacity: 0.6;
-            filter: blur(4px);
+        #echo-video-perspective-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; perspective: 1200px; z-index: 6; pointer-events: none; }
+        .echo-video-card-wrapper { position: absolute; top: 50%; left: 50%; width: clamp(320px, 60vw, 850px); display: none; opacity: 0; transform-style: preserve-3d; will-change: transform, opacity; pointer-events: auto; cursor: pointer; }
+        .echo-video-casing { width: 100%; aspect-ratio: 16/9; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 4px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.9); position: relative; }
+        .echo-video-casing video { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; background: #050505; display: block; }
+        .echo-cover-overlay { position: absolute; top: 4px; left: 4px; width: calc(100% - 8px); height: calc(100% - 8px); background: rgba(0, 0, 0, 0.6); border-radius: 8px; display: flex; justify-content: center; align-items: center; z-index: 3; transition: opacity 0.4s ease; pointer-events: none; }
+        .echo-video-title { color: var(--text-main); font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 400; letter-spacing: 0.02em; margin: 0; text-align: center; text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+
+        .echo-play-button-container { display: flex; justify-content: center; margin-top: 24px; }
+        .echo-play-button { width: 56px; height: 56px; border-radius: 50%; background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease, background 0.3s ease; }
+        .echo-video-card-wrapper:hover .echo-play-button { transform: scale(1.1); background: rgba(40, 40, 40, 0.8); }
+        .echo-play-button svg { transition: all 0.3s ease; }
+        .echo-icon-play { width: 100%; height: 100%; }
+        .echo-icon-pause { width: 40%; height: 40%; }
+        .echo-play-button.is-play .echo-icon-play { display: block; }
+        .echo-play-button.is-play .echo-icon-pause { display: none; }
+        .echo-play-button.is-pause .echo-icon-play { display: none; }
+        .echo-play-button.is-pause .echo-icon-pause { display: block; }
+        .echo-play-button.is-play svg { margin-left: 3px; }
+        .echo-play-button.is-pause svg { margin-left: 0; }
+
+        .echo-interactive-element { position: relative; }
+        .echo-interactive-element::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(circle 250px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.8), transparent 40%); z-index: 10; padding: 1px; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity 0.3s ease; }
+        .echo-interactive-element:hover::after { opacity: 1; }
+
+        /* ==========================================================================
+           7. PULSE SECTION
+           ========================================================================== */
+        #pulse-view { display: block; width: 100%; position: relative; }
+
+        section { position: relative; z-index: 10; }
+        .fullscreen-section { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--section-padding-desktop); }
+
+        .hero-text-container { text-align: center; margin-bottom: 3.12rem; width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 20; }
+        .hero-intro { opacity: 0; transform: scale(0.9); margin-bottom: clamp(1.17rem, 3.12vw, 2.34rem); }
+        .hero-title { position: relative; }
+
+        .word-wrap { display: inline-block; overflow: hidden; vertical-align: top; }
+        .word { display: inline-block; transform: translateY(100%); opacity: 0; }
+        .char { opacity: 0; display: inline-block; }
+
+        #target-text {
+            white-space: nowrap;
+            font-size: clamp(2rem, 9.75vw, 8rem);
+        }
+        @media (min-width: 768px) {
+            #target-text {
+                font-size: clamp(1.5rem, 7.5vw, 8rem);
+            }
         }
 
-        @keyframes border-flow {
-            0% { background-position: 0% 0; }
-            100% { background-position: 300% 0; }
+        .hero-title .word {
+            position: relative;
+            background: var(--gradient-siri);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-position: 100% 0%;
         }
 
-        /* 3D Canvas */
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+        .hero-title .word::after {
+            content: attr(data-word);
+            position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            background: var(--gradient-siri);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-position: 100% 0%;
+            filter: blur(12px);
             opacity: 0;
-            transition: opacity 2.5s ease;
+            z-index: -1;
+            pointer-events: none;
         }
 
-        #canvas-container.active {
-            opacity: 1;
+        .hero-title.animate-gradient .word { animation: sweepGradient 5.625s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .hero-title.animate-gradient .word::after { animation: sweepGradient 5.625s cubic-bezier(0.25, 1, 0.5, 1) forwards, glowFlow 5.625s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes sweepGradient { 0% { background-position: 100% 0%; } 100% { background-position: 0% 0%; } }
+        @keyframes glowFlow { 0% { opacity: 0; } 30% { opacity: 0.4; } 70% { opacity: 0.4; } 100% { opacity: 0; } }
+
+        .video-module { position: relative; width: 100%; max-width: 1000px; aspect-ratio: 16 / 9; background: transparent; opacity: 0; transform: scale(0.93); z-index: 1; }
+        .video-module video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 20px; background: #000; }
+
+        .glass-play-btn {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25); display: flex; justify-content: center; align-items: center;
+            cursor: pointer; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 60;
         }
+        .glass-play-btn.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .glass-play-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translate(-50%, -50%) scale(1.05); }
+        .glass-play-btn svg { width: 28px; height: 28px; fill: white; margin-left: 4px; }
+
+        .power-text-container { text-align: center; margin-bottom: 4rem; width: 100%; max-width: 900px; }
+        .power-text { font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 500; letter-spacing: -0.02em; line-height: 1.2; color: var(--text-main); }
+
+        .ui-info-section { width: 100%; padding: 8rem 0 8rem 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; z-index: 10; }
+        .ui-info-container { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 4rem; padding-left: max(2rem, calc((100vw - 1200px) / 2)); }
+        /* P3-2: unified to the same 1000px token used everywhere else instead of a one-off 900px */
+        @media (min-width: 1000px) { .ui-info-container { flex-direction: row; justify-content: space-between; align-items: center; } }
+        .ui-text-col { flex: 1; width: 100%; max-width: 500px; padding-right: 2rem; }
+        .ui-desc { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 2rem; }
+        .ui-img-col { flex: 1.2; width: 100%; display: flex; justify-content: flex-end; }
+        /* P2-6 kept as-is (webp already in place); aspect-ratio reserved to avoid layout
+           shift since real intrinsic pixel dimensions weren't supplied for width/height attrs */
+        .ui-laptop-img { width: 100%; max-width: 800px; height: auto; aspect-ratio: 8 / 5; display: block; object-fit: cover; object-position: right center; }
+
+        #features-section { width: 100%; background: transparent; padding-bottom: 8rem; z-index: 100; position: relative; }
+        .features-header { padding: 8rem 2rem 4rem; text-align: center; }
+        .features-intro { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+
+        /* P0-2: was touch-action:none, which trapped vertical scroll over the whole
+           80vh carousel on mobile. pan-y lets the browser keep handling vertical swipes;
+           only an in-progress card drag suppresses it (toggled in JS per-card). */
+        #physics-carousel-container { position: relative; width: 100%; height: 80vh; height: 80dvh; min-height: 600px; display: flex; justify-content: center; align-items: center; perspective: 1200px; touch-action: pan-y; }
+        .onboarding-prompt {
+            position: absolute; left: 50%; transform: translate(-50%, 0);
+            color: rgba(255, 255, 255, 0.8); font-family: "SF Pro Display", -apple-system, sans-serif;
+            font-size: 1.1rem; letter-spacing: 0.02em; pointer-events: none; opacity: 0;
+            transition: opacity 0.5s ease; animation: breathePrompt 3s infinite ease-in-out; z-index: 100;
+        }
+        @keyframes breathePrompt { 0%, 100% { transform: translate(-50%, 0) scale(1); } 50% { transform: translate(-50%, 0) scale(1.05); } }
+
+        /* P2-1: backdrop-filter removed from .physics-card — it composited rgba(255,255,255,0.03)
+           over #000 with a video behind it, which is visually indistinguishable from no blur
+           at all, at real per-frame compositing cost since the card transform changes every frame. */
+        .physics-card { position: absolute; width: clamp(200px, 28vw, 420px); aspect-ratio: 16 / 9; padding: 8px; border-radius: 24px; transform-style: preserve-3d; will-change: transform; cursor: grab; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.2); transition: box-shadow 0.4s ease; touch-action: pan-y; }
+        .physics-card.is-dragging { touch-action: none; }
+        .physics-card:active { cursor: grabbing; }
+        .video-wrapper { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: #000; }
+        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @media (hover: hover) and (pointer: fine) { .physics-card.is-hovered { box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.25), 0 0 20px rgba(255,255,255,0.15); } }
+        .card-text-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.2); transition: opacity 0.5s ease; pointer-events: none; z-index: 10; }
+        .card-text-overlay h2 { color: var(--text-main); font-family: "SF Pro", -apple-system, sans-serif; font-weight: 400; font-size: clamp(1.2rem, 2.5vw, 2rem); letter-spacing: 0.02em; margin: 0; }
+
+        /* ==========================================================================
+           8. CONTACT SECTION
+           ========================================================================== */
+        #contact-view { display: none; width: 100%; min-height: 100vh; min-height: 100dvh; background: var(--bg-color); }
+        .contact-section { position: relative; width: 100%; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1.5rem; overflow: hidden; }
+        .contact-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; pointer-events: none; opacity: 0; }
+        .contact-title { font-size: clamp(3rem, 8vw, 6rem); font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); margin-bottom: 2.5rem; text-align: center; }
+        .contact-buttons { display: flex; gap: 1.5rem; pointer-events: auto; }
+
+        .glass-btn.contact-btn {
+            animation: sway 4s ease-in-out infinite;
+            color: var(--text-muted);
+            transition: color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+        }
+        .glass-btn.contact-btn:nth-child(2) { animation-delay: -2s; }
+        .glass-btn.contact-btn svg {
+            width: 24px; height: 24px;
+            position: relative; z-index: 2;
+            transition: all 0.3s ease;
+        }
+        .glass-btn.contact-btn svg.icon-fill {
+            width: 30px; height: 30px;
+        }
+        .glass-btn.contact-btn .icon-stroke { stroke: currentColor; fill: none; }
+        .glass-btn.contact-btn .icon-fill { fill: currentColor; stroke: none; }
+
+        @media (hover: hover) and (pointer: fine) {
+            .glass-btn.contact-btn:hover { color: #ffffff; }
+        }
+        @keyframes sway { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
+
+        /* ==========================================================================
+           9. LEGAL MODAL
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .modal-overlay.is-open {
+            opacity: 1; pointer-events: auto;
+        }
+        .modal-sway-wrapper {
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            animation: modalSway 6s ease-in-out infinite;
+        }
+        @keyframes modalSway {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .modal-container {
+            width: 75%; max-width: 800px; max-height: 85vh; max-height: 85dvh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 3rem;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .modal-overlay.is-open .modal-container {
+            transform: scale(1);
+        }
+        .modal-container::before {
+            content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px;
+            background: radial-gradient(circle 400px at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.3), transparent 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .modal-container:hover::before { opacity: 1; }
+        }
+        .modal-close {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .modal-close:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+        .modal-content {
+            overflow-y: auto;
+            padding-right: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .modal-content::-webkit-scrollbar { width: 6px; }
+        .modal-content::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+        .modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .modal-content h3 {
+            font-family: var(--font-family);
+            font-weight: 500;
+            font-size: 1.25rem;
+            color: #fff;
+            margin: 2rem 0 1rem 0;
+            letter-spacing: 0.01em;
+        }
+        .modal-content h3:first-child { margin-top: 0; }
+        .modal-content p {
+            font-family: var(--font-family);
+            font-weight: 400;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .modal-content .last-updated {
+            font-weight: 300;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+            margin-bottom: 0;
+        }
+
+        /* ==========================================================================
+           10. MOBILE OPTIMIZATIONS
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+            .hamburger { display: block; }
+            .fullscreen-section { padding: 14vh 1.5rem 40px; min-height: auto; }
+            .hero-text-container, .power-text-container { margin-bottom: 2rem; }
+            .video-module { width: calc(100% + 3rem); margin-left: -1.5rem; margin-right: -1.5rem; max-width: none; border-radius: 0; }
+            .video-module video { border-radius: 0; }
+            .ui-info-section { padding: 40px 0; }
+            .ui-info-container { gap: 2rem; padding-left: 1.5rem; }
+            .ui-text-col { padding-right: 1.5rem; }
+            .ui-desc { font-size: 1.56rem; }
+            .ui-img-col { width: 100%; margin: 0; }
+            .ui-laptop-img { width: 100%; max-width: none; transform: scale(0.9); transform-origin: right center; }
+            #features-section { padding-bottom: 40px; }
+            .features-header { padding: 40px 1.5rem 2rem; }
+            .physics-card { width: clamp(160px, 42vw, 280px); padding: 6px; border-radius: 18px; }
+            .video-wrapper { border-radius: 12px; }
+
+            .modal-container { width: 95%; padding: 2rem 1.5rem; border-radius: 24px; }
+            .modal-close { top: 1rem; right: 1rem; }
+        }
+
+        /* P1-8: headline overflow fix. nowrap + a high clamp floor clips text on 320-390px
+           phones (e.g. "Digital Worlds + Visual Systems" at a 1.4rem floor is wider than a
+           360px viewport). Below 420px we allow wrapping and lower the floor. */
+        @media (max-width: 420px) {
+            .reveal-text .line2 { white-space: normal; font-size: clamp(1.1rem, 5.6vw, 3.5rem); padding: 0 0.5rem; }
+            #echo-outro-text { white-space: normal; font-size: clamp(1.1rem, 7vw, 5.5rem); padding: 0 0.5rem; }
+            #target-text { white-space: normal; font-size: clamp(1.6rem, 9vw, 8rem); }
+            .echo-text-line { white-space: normal; padding: 0 0.5rem; }
+        }
+
+        /* ==========================================================================
+           11. REDUCED MOTION / ACCESSIBILITY (added)
+           P2-7: prefers-reduced-motion is also treated as the site's lowest quality
+           tier in JS (Quality.js) — this block handles the CSS-only decorative loops.
+           ========================================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            .tap-icon-svg,
+            #home-echo-btn svg,
+            .morph-dots, .dots-group, .dot-1, .dot-2, .dot-3, .dot-4, .dot-5,
+            .onboarding-prompt,
+            .glass-btn.contact-btn,
+            .modal-sway-wrapper,
+            .home-scroll-indicator-inner {
+                animation: none !important;
+            }
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+
+        /* Single shared WebGL surface (P1-1). Replaces the four separate canvases
+           (#orb-canvas, #echo-canvas, #particle-canvas, #contact-canvas). Only one
+           view is ever visible at a time (switchView is exclusive), so one fixed,
+           full-viewport canvas can serve all four scenes; the active module sets
+           z-index and opacity per view on enter. */
+        #app-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; height: 100dvh;
+            display: block; pointer-events: none;
+            z-index: 1; opacity: 0;
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #app-canvas.is-visible { opacity: 1; }
+        #app-canvas.instant-fade { transition: none; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div id="logo-center" class="logo">A Thousand Islands</div>
-        <div id="logo-corner" class="logo">A Thousand Islands</div>
-        <div id="coming-soon">Coming Soon</div>
-        <button id="btn-wake" class="btn">Wake Up</button>
+<!-- ==========================================================================
+     HTML STRUCTURE
+     ========================================================================== -->
+
+<!-- Shared SVG Icons -->
+<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="echo-icon-play" viewBox="552 241 284 285">
+        <path d="M0 0 C4.82534813 1.15542358 8.85159262 3.93879465 13.01757812 6.54296875 C15.14407612 7.82995451 17.27173 9.11503187 19.40039062 10.3984375 C21.07149902 11.41429932 21.07149902 11.41429932 22.77636719 12.45068359 C28.1442558 15.68948268 33.61640023 18.74647283 39.07540894 21.82806396 C67.42413322 37.85607894 67.42413322 37.85607894 69.26757812 41.54296875 C69.76791617 45.87923176 69.72444252 47.88944656 67.18945312 51.515625 C64.32341051 54.7559831 60.949573 56.75289513 57.14257812 58.73046875 C55.70820474 59.50637297 54.27464455 60.2837819 52.84179688 61.0625 C52.09333496 61.46549316 51.34487305 61.86848633 50.57373047 62.28369141 C46.65840539 64.42165952 42.80916277 66.67204041 38.95507812 68.91796875 C37.35882745 69.84523026 35.76247225 70.77231186 34.16601562 71.69921875 C33.36518555 72.16457031 32.56435547 72.62992187 31.73925781 73.109375 C29.20170766 74.58117414 26.66090086 76.04720359 24.11914062 77.51171875 C22.85324097 78.24189209 22.85324097 78.24189209 21.56176758 78.98681641 C19.96194564 79.90940925 18.36156423 80.83103295 16.76049805 81.75146484 C12.45814373 84.23546386 8.25034843 86.80486358 4.11669922 89.56225586 C0.56414661 91.44641269 -1.77565963 91.25648325 -5.73242188 90.54296875 C-9.23627782 87.22838991 -10.54239937 85.64644649 -11.36734009 80.85594177 C-11.39674812 79.4673364 -11.39921178 78.07798434 -11.37939453 76.68920898 C-11.38815613 75.92583221 -11.39691772 75.16245544 -11.40594482 74.37594604 C-11.42784785 71.86723009 -11.41342154 69.36029451 -11.39648438 66.8515625 C-11.39985482 65.10091312 -11.40470934 63.35026603 -11.41098022 61.59962463 C-11.41833887 57.9370386 -11.40767768 54.27506365 -11.38427734 50.61254883 C-11.35576854 45.92244387 -11.37221248 41.23376821 -11.40213966 36.54371548 C-11.42022219 32.93106853 -11.4144507 29.31875959 -11.4015007 25.70610237 C-11.3981704 23.97696831 -11.40224057 22.24780334 -11.41389847 20.51870537 C-11.42662603 18.10075651 -11.40720823 15.68511154 -11.37939453 13.26733398 C-11.38951569 12.55602829 -11.39963684 11.8447226 -11.4100647 11.11186218 C-11.32887748 7.29455519 -10.80799619 5.63902737 -8.41952515 2.60316467 C-5.5230641 0.38245463 -3.65914276 -0.25282592 0 0 Z" fill="#ffffff" transform="translate(673.732421875,338.45703125)"/>
+    </symbol>
+    <symbol id="echo-icon-pause" viewBox="0 0 24 24">
+        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#ffffff"/>
+    </symbol>
+</svg>
+
+<!-- P1-1: single shared WebGL canvas for all four views -->
+<canvas id="app-canvas" aria-hidden="true"></canvas>
+
+<!-- Navigation -->
+<header id="main-header" class="is-visible">
+    <button type="button" class="logo" id="nav-logo">A Thousand Islands</button>
+    <nav class="desktop-nav">
+        <button type="button" class="nav-link" id="nav-home-desktop">Home</button>
+        <button type="button" class="nav-link" id="nav-echo-desktop">Echo</button>
+        <button type="button" class="nav-link" id="nav-pulse-desktop">Pulse</button>
+        <button type="button" class="nav-link" id="nav-legal-desktop">Legal</button>
+        <button type="button" class="nav-link" id="nav-contact-desktop">Contact</button>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+        <span class="line"></span>
+        <span class="line"></span>
+        <span class="line"></span>
+    </button>
+</header>
+
+<div class="mobile-menu-overlay" id="mobile-menu">
+    <nav class="mobile-nav">
+        <button type="button" class="mobile-nav-link" id="nav-home-mobile">Home</button>
+        <button type="button" class="mobile-nav-link" id="nav-echo-mobile">Echo</button>
+        <button type="button" class="mobile-nav-link" id="nav-pulse-mobile">Pulse</button>
+        <button type="button" class="mobile-nav-link" id="nav-legal-mobile">Legal</button>
+        <button type="button" class="mobile-nav-link" id="nav-contact-mobile">Contact</button>
+    </nav>
+</div>
+
+<!-- Home View -->
+<div id="home-view">
+    <div id="home-scroll-indicator" class="home-scroll-indicator" aria-hidden="true">
+        <span class="home-scroll-indicator-inner">Scroll Down</span>
+    </div>
+    <div id="home-reveal-content">
+        <div class="reveal-text">
+            <div class="line1">We Build</div>
+            <div class="line2">Digital Worlds + Visual Systems</div>
+        </div>
+        <div class="home-buttons-container">
+            <button id="home-echo-btn" class="glass-btn" aria-label="Echo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 30">
+                    <path d="m4.75,9v6c0,.414-.336.75-.75.75s-.75-.336-.75-.75v-6c0-.414.336-.75.75-.75s.75.336.75.75Zm7.25-2.75c-.414,0-.75.336-.75.75v10c0,.414.336.75.75.75s.75-.336.75-.75V7c0-.414-.336-.75-.75-.75Zm8,2c-.414,0-.75.336-.75.75v6c0,.414.336.75.75.75s.75-.336.75-.75v-6c0-.414-.336-.75-.75-.75Zm-12,11.5c-.414,0-.75-.336-.75-.75V5c0-.414.336-.75.75-.75s.75.336.75.75v14c0,.414.336.75.75.75s.75-.336.75-.75Zm8.75-.75V5c0-.414-.336-.75-.75-.75s-.75.336-.75.75v14c0,.414.336.75.75.75s.75-.336.75-.75Z"/>
+                </svg>
+                <span class="btn-tooltip">Echo</span>
+            </button>
+            <button id="home-pulse-btn" class="glass-btn" aria-label="Pulse">
+                <svg class="morph-dots" viewBox="0 0 24 24">
+                    <g class="dots-group">
+                        <circle class="dot-1" cx="12" cy="12" r="1.8" />
+                        <circle class="dot-2" cx="12" cy="12" r="1.8" />
+                        <circle class="dot-3" cx="12" cy="12" r="1.8" />
+                        <circle class="dot-4" cx="12" cy="12" r="1.8" />
+                        <circle class="dot-5" cx="12" cy="12" r="1.8" />
+                    </g>
+                </svg>
+                <span class="btn-tooltip">Pulse</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Echo View -->
+<div id="echo-view">
+    <div id="echo-landing-wrapper">
+        <div id="echo-landing-ui">
+            <h2 id="echo-intro-text" class="echo-text-line section-intro">Introducing Echo</h2>
+            <h1 id="echo-title-text" class="echo-text-line section-title">A Sonic Boom</h1>
+        </div>
     </div>
 
-    <div id="canvas-container"></div>
+    <div id="echo-scroll-indicator" class="tap-icon-container">
+        <img class="tap-icon-svg" src="./pulse/gallery/tap.svg" alt="" width="110" height="135">
+    </div>
 
-    <!-- Import Three.js -->
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+    <!-- P2-8: visible, explicit control instead of hijacking the first tap anywhere on the site -->
+    <button type="button" id="echo-motion-btn" class="motion-prompt-btn">Enable motion parallax</button>
 
-        // --- UI Elements ---
-        const logoCenter = document.getElementById('logo-center');
-        const logoCorner = document.getElementById('logo-corner');
-        const comingSoon = document.getElementById('coming-soon');
-        const btnWake = document.getElementById('btn-wake');
-        const canvasContainer = document.getElementById('canvas-container');
+    <div id="echo-hero-video-wrapper">
+        <video id="echo-hero-video" src="./echo/videos/echo-hero-visual.mp4" playsinline preload="none"></video>
+        <div class="echo-hero-controls">
+            <div id="echo-hero-play-btn" class="echo-play-button is-play">
+                <svg class="echo-icon-play"><use href="#echo-icon-play"></use></svg>
+                <svg class="echo-icon-pause" style="display:none;"><use href="#echo-icon-pause"></use></svg>
+            </div>
+        </div>
+    </div>
 
-        // --- Initial Load Animation ---
-        window.addEventListener('load', () => {
-            // Fade in logo after 0.5s
-            setTimeout(() => {
-                logoCenter.classList.add('show');
-            }, 500);
+    <div id="echo-mid-text-wrapper">
+        <h2 id="echo-mid-text">Every Sound Has<br>a Shape</h2>
+    </div>
 
-            // Fade in button after 2s
-            setTimeout(() => {
-                btnWake.classList.add('show');
-            }, 2000);
+    <div id="echo-video-perspective-container">
+        <div class="echo-video-card-wrapper">
+            <div class="echo-video-casing echo-interactive-element">
+                <!-- Cover art is the video's own first frame (see .echo-cover-video init
+                     in JS) rather than a separate jpg — preload="metadata" fetches just
+                     enough to decode that frame without downloading the whole clip. -->
+                <video class="echo-cover-video" src="./echo/videos/dynamic-forms.mp4" loop playsinline preload="metadata"></video>
+                <div class="echo-cover-overlay">
+                    <h3 class="echo-video-title">Dynamic Forms</h3>
+                </div>
+            </div>
+            <div class="echo-play-button-container">
+                <div class="echo-play-button is-play echo-interactive-element">
+                    <svg class="echo-icon-play"><use href="#echo-icon-play"></use></svg>
+                    <svg class="echo-icon-pause"><use href="#echo-icon-pause"></use></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="echo-video-card-wrapper">
+            <div class="echo-video-casing echo-interactive-element">
+                <video class="echo-cover-video" src="./echo/videos/spatial-experience.mp4" loop playsinline preload="metadata"></video>
+                <div class="echo-cover-overlay">
+                    <h3 class="echo-video-title">Spatial Experience</h3>
+                </div>
+            </div>
+            <div class="echo-play-button-container">
+                <div class="echo-play-button is-play echo-interactive-element">
+                    <svg class="echo-icon-play"><use href="#echo-icon-play"></use></svg>
+                    <svg class="echo-icon-pause"><use href="#echo-icon-pause"></use></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="echo-video-card-wrapper">
+            <div class="echo-video-casing echo-interactive-element">
+                <video class="echo-cover-video" src="./echo/videos/visual-identity.mp4" loop playsinline preload="metadata"></video>
+                <div class="echo-cover-overlay">
+                    <h3 class="echo-video-title">Visual Identity</h3>
+                </div>
+            </div>
+            <div class="echo-play-button-container">
+                <div class="echo-play-button is-play echo-interactive-element">
+                    <svg class="echo-icon-play"><use href="#echo-icon-play"></use></svg>
+                    <svg class="echo-icon-pause"><use href="#echo-icon-pause"></use></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="echo-outro-text-wrapper">
+        <h2 id="echo-outro-text"></h2>
+    </div>
+</div>
+
+<!-- Pulse View -->
+<div id="pulse-view">
+    <section id="hero" class="fullscreen-section">
+        <div class="hero-text-container">
+            <div class="hero-intro section-intro">Introducing Pulse</div>
+            <div class="hero-title section-title" id="target-text">
+                <span class="word-wrap"><span class="word" data-word="Visual Intelligence.">Visual Intelligence.</span></span>
+            </div>
+        </div>
+
+        <div class="video-module" id="hero-video-module">
+            <video id="hero-vid" muted playsinline preload="none">
+                <source src="./pulse/videos/hero.mp4" type="video/mp4">
+            </video>
+            <div class="glass-play-btn" id="hero-play-btn">
+                <svg viewBox="0 0 24 24"><path d="M7 6.5C7 5.4 8.2 4.8 9.1 5.4l9.6 6.1c.8.5.8 1.6 0 2.1l-9.6 6.1C8.2 20.2 7 19.6 7 18.5V6.5z"/></svg>
+            </div>
+        </div>
+    </section>
+
+    <section id="power" class="fullscreen-section">
+        <div class="power-text-container">
+            <div class="power-text type-text">Now the power<br>is in your<br>hands</div>
+        </div>
+        <div class="video-module" id="power-video-module">
+            <video id="power-vid" muted playsinline loop preload="none">
+                <source src="./pulse/videos/hand-gesture-video.mp4" type="video/mp4">
+            </video>
+        </div>
+    </section>
+
+    <section id="ui-info" class="ui-info-section">
+        <div class="ui-info-container">
+            <div class="ui-text-col" id="ui-text">
+                <p class="ui-desc">
+                    <span class="text-white">Pulse</span> <span class="text-muted">changes the way an interface behaves around you. It reacts when you move, when you speak, when you pause...</span>
+                </p>
+                <p class="ui-desc">
+                    <span class="text-muted">Build environments where</span> <span class="text-white">motion</span> <span class="text-muted">carries meaning</span>
+                </p>
+            </div>
+            <div class="ui-img-col" id="ui-img">
+                <img src="./pulse/gallery/ui.webp" alt="Pulse UI on Laptop" class="ui-laptop-img" loading="lazy" decoding="async">
+            </div>
+        </div>
+    </section>
+
+    <section id="features-section">
+        <div class="features-header">
+            <h2 class="features-intro">
+                <span class="text-muted">Here’s what you get with the</span> <span class="text-white">Pulse<br>Visual System.</span>
+            </h2>
+        </div>
+
+        <div id="physics-carousel-container">
+            <div class="onboarding-prompt">Drag to explore</div>
+
+            <div class="physics-card" data-index="0">
+                <div class="video-wrapper">
+                    <video muted playsinline loop preload="none">
+                        <source src="./pulse/videos/adaptive-motion.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-text-overlay"><h2>Adaptive Motion</h2></div>
+                </div>
+            </div>
+
+            <div class="physics-card" data-index="1">
+                <div class="video-wrapper">
+                    <video muted playsinline loop preload="none">
+                        <source src="./pulse/videos/voice-control.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-text-overlay"><h2>Voice Control</h2></div>
+                </div>
+            </div>
+
+            <div class="physics-card" data-index="2">
+                <div class="video-wrapper">
+                    <video muted playsinline loop preload="none">
+                        <source src="./pulse/videos/particle-engine.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-text-overlay"><h2>Particle Engine</h2></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Contact View -->
+<div id="contact-view">
+    <section id="contact" class="contact-section">
+        <div class="contact-content">
+            <h2 class="contact-title">Contact Us</h2>
+            <div class="contact-buttons">
+                <a href="mailto:contact@athousandislands.tech" class="glass-btn contact-btn" aria-label="Email Us">
+                    <svg class="icon-fill" viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(0,-952.36218)">
+                            <path d="m 9.9999999,973.36218 c -2.1641,0 -4,1.8359 -4,4 l 0,50.00002 c 0,2.1641 1.8359,4 4,4 l 80.0000001,0 c 2.1641,0 4,-1.8359 4,-4 l 0,-50.00002 c 0,-2.1641 -1.8359,-4 -4,-4 l -80.0000001,0 z m 2.0000001,6 76,0 0,1.4688 -38,27.78122 -38,-27.78122 0,-1.4688 z m 0,8.9062 36.21875,26.50002 a 3.0003,3.0003 0 0 0 3.5625,0 L 88,988.26838 l 0,37.09382 -76,0 0,-37.09382 z"/>
+                        </g>
+                    </svg>
+                </a>
+                <a href="https://instagram.com/athousandislands.tech" target="_blank" rel="noopener noreferrer" class="glass-btn contact-btn" aria-label="Instagram">
+                    <svg class="icon-stroke" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                        <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Legal Modal -->
+<div id="legal-modal-overlay" class="modal-overlay">
+    <div class="modal-sway-wrapper">
+        <div class="modal-container">
+            <button class="modal-close" aria-label="Close">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="modal-content">
+                <h3>Privacy Policy</h3>
+                <p>A Thousand Islands is designed to showcase interactive creative technology and does not require you to create an account or provide personal information.</p>
+                <p>We use privacy-friendly analytics to understand general website performance, such as page visits and device types. This information is aggregated and is not used to personally identify you.</p>
+                <p>If our data practices change in the future, this policy will be updated accordingly.</p>
+
+                <h3>Cookie Policy</h3>
+                <p>This website may use essential cookies and privacy-friendly analytics cookies to help the site function correctly and understand overall usage.</p>
+                <p>No cookies are used to build advertising profiles or sell personal information.</p>
+                <p>By continuing to use this website, you agree to the use of these cookies.</p>
+
+                <h3>Terms of Use</h3>
+                <p>All content, artwork, animations, videos, designs and code on this website are the intellectual property of A Thousand Islands unless otherwise stated.</p>
+                <p>You may browse and enjoy the experience for personal use. Reproduction, redistribution or commercial use of any content without permission is prohibited.</p>
+                <p>This website is provided “as is” without warranties of any kind.</p>
+
+                <p class="last-updated">Last updated: July 2026</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    /* ==========================================================================
+       MODULE: GLOBAL CONFIGURATION
+       ========================================================================== */
+    const CONFIG = {
+        physics: {
+            tension: { default: 0.006, hover: 0.025, drag: 0.15 },
+            friction: { default: 0.82, hover: 0.88, drag: 0.75 },
+            maxVelocity: 120,
+            dragThreshold: 10
+        },
+        echo: {
+            arrivalDuration: 2.9,
+            scrollThreshold: 10
+        },
+        pulse: {
+            particleCountDesktop: 700,
+            particleCountMobile: 400
+        },
+        contact: {
+            particleCount: 800,
+            explosionMaxStrength: 1.5
+        },
+        home: {
+            orbParticleCount: 900
+        },
+        // P3-2: single source of truth for breakpoints, mirrored exactly by the CSS
+        // media queries above (768 / 1000). Nothing else in this file should hardcode
+        // a device-width threshold.
+        breakpoints: {
+            mobileMax: 768,
+            desktopMin: 1000
+        }
+    };
+
+    function isNarrowViewport() {
+        return window.innerWidth <= CONFIG.breakpoints.mobileMax;
+    }
+
+    /* ==========================================================================
+       MODULE: FRAME-RATE-INDEPENDENT MATH HELPERS (P1-2 / F13)
+       All the springy "current += (target-current)*k" and decay "*k" constants in
+       this file were originally tuned per-frame at an assumed 60Hz. approach()/decay()
+       reproduce identical motion at 60Hz while scaling correctly at 120Hz or under
+       throttling, by expressing the same rate as a per-second quantity.
+       ========================================================================== */
+    function approach(current, target, ratePerSixtyHz, dt) {
+        const f = 1 - Math.pow(1 - ratePerSixtyHz, dt * 60);
+        return current + (target - current) * f;
+    }
+    function decay(value, ratePerSixtyHz, dt) {
+        return value * Math.pow(ratePerSixtyHz, dt * 60);
+    }
+
+    /* ==========================================================================
+       MODULE: QUALITY PROFILE (P1-3, P2-7)
+       Derived from capability signals, not window.innerWidth (a proxy for a window,
+       not a GPU — an iPad in landscape reports 1366 and a narrowed desktop window
+       reports 700). Recomputed only on a genuine orientation change, never on the
+       URL-bar-driven resize noise mobile browsers produce while scrolling.
+       ========================================================================== */
+    const Quality = (() => {
+        const profiles = {
+            low:  { dprCap: 1.25, particleScale: 0.45, maxPointSize: 120, backdropBlur: false, gyro: false },
+            mid:  { dprCap: 1.5,  particleScale: 0.7,  maxPointSize: 180, backdropBlur: true,  gyro: true  },
+            high: { dprCap: 2.0,  particleScale: 1.0,  maxPointSize: 250, backdropBlur: true,  gyro: true  }
+        };
+
+        function computeTier() {
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced) return 'low';
+            const coarse = window.matchMedia('(pointer: coarse)').matches;
+            const mem = navigator.deviceMemory || (coarse ? 4 : 8);
+            const cores = navigator.hardwareConcurrency || (coarse ? 4 : 8);
+            if (coarse && (mem <= 4 || cores <= 4)) return 'low';
+            if (coarse) return 'mid';
+            if (mem <= 4 || cores <= 4) return 'mid';
+            return 'high';
+        }
+
+        let tier = computeTier();
+        let current = profiles[tier];
+
+        return {
+            get tier() { return tier; },
+            get current() { return current; },
+            recompute() {
+                tier = computeTier();
+                current = profiles[tier];
+                return current;
+            }
+        };
+    })();
+
+    /* ==========================================================================
+       MODULE: SHARED RENDERER (P1-1, P0-4, P0-7, P1-4)
+       One WebGLRenderer for the whole page. antialias is always off — every
+       particle is a shader-feathered point sprite (smoothstep edge + discard),
+       so MSAA has nothing to anti-alias; it was pure cost with no visible benefit.
+       Also owns context-loss recovery and the adaptive resolution scaler.
+       ========================================================================== */
+    const AppRenderer = (() => {
+        const canvas = document.getElementById('app-canvas');
+        const renderer = new THREE.WebGLRenderer({
+            canvas, alpha: true, antialias: false, powerPreference: 'high-performance'
+        });
+        renderer.setClearColor(0x000000, 0);
+
+        let renderScale = 1.0;
+        let contextLost = false;
+
+        function applyPixelRatio() {
+            const cap = Quality.current.dprCap;
+            const dpr = Math.min(window.devicePixelRatio || 1, cap) * renderScale;
+            renderer.setPixelRatio(Math.max(dpr, 0.5));
+        }
+
+        function setSize(w, h) {
+            renderer.setSize(w, h, false);
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+        }
+
+        applyPixelRatio();
+        setSize(window.innerWidth, window.innerHeight);
+
+        // P0-7: without this, a context loss (very plausible with sustained additive
+        // overdraw on a memory-constrained phone, or simply backgrounding the tab)
+        // leaves a permanently black canvas with no recovery path.
+        canvas.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            contextLost = true;
+            console.warn('[ATI] WebGL context lost — will recover automatically.');
+        }, false);
+
+        canvas.addEventListener('webglcontextrestored', () => {
+            contextLost = false;
+            applyPixelRatio();
+            setSize(window.innerWidth, window.innerHeight);
+            AppModules.notifyContextRestored();
+            console.info('[ATI] WebGL context restored.');
+        }, false);
+
+        // P1-4: adaptive resolution scaling. Rolling frame-time average; step render
+        // scale down under sustained load, back up once it recovers. Because every
+        // visible thing is a soft additive point sprite, resolution changes here are
+        // close to imperceptible — this technique is unusually cheap to apply on this
+        // page specifically.
+        let frameTimes = [];
+        function reportFrameTime(ms) {
+            if (Quality.tier === 'low') return; // low tier is already at the floor
+            frameTimes.push(ms);
+            if (frameTimes.length < 60) return;
+            const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+            frameTimes = [];
+            if (avg > 20 && renderScale > 0.55) {
+                renderScale = Math.max(0.55, renderScale - 0.15);
+                applyPixelRatio();
+            } else if (avg < 13 && renderScale < 1.0) {
+                renderScale = Math.min(1.0, renderScale + 0.1);
+                applyPixelRatio();
+            }
+        }
+
+        return {
+            renderer, canvas,
+            setSize, applyPixelRatio, reportFrameTime,
+            get contextLost() { return contextLost; },
+            setZIndex(z) { canvas.style.zIndex = String(z); },
+            show() { canvas.classList.add('is-visible'); },
+            hideInstant() {
+                canvas.classList.add('instant-fade');
+                canvas.classList.remove('is-visible');
+                requestAnimationFrame(() => canvas.classList.remove('instant-fade'));
+            }
+        };
+    })();
+
+    /* ==========================================================================
+       MODULE: MODULE REGISTRY (P1-6)
+       Replaces the window.reset* / window.trigger* global convention. Fixes F8
+       (Contact's arrival trigger previously raced against chunked particle
+       generation and could permanently no-op) by construction: enter() always
+       runs after init() has fully completed, never before.
+       ========================================================================== */
+    const AppModules = (() => {
+        const modules = {};
+        let activeName = null;
+
+        function register(name, mod) { modules[name] = mod; }
+
+        function enter(name) {
+            const prev = activeName && modules[activeName];
+            if (prev && prev.exit) prev.exit();
+            activeName = name;
+            const mod = modules[name];
+            if (!mod.initialized) {
+                if (mod.init) mod.init();
+                mod.initialized = true;
+            }
+            AppRenderer.setZIndex(mod.zIndex != null ? mod.zIndex : 1);
+            if (mod.instantCanvasFade) AppRenderer.hideInstant();
+            if (mod.enter) mod.enter();
+        }
+
+        function update(dt) {
+            const mod = activeName && modules[activeName];
+            if (mod && mod.update) mod.update(dt);
+        }
+
+        function resize(w, h) {
+            Object.keys(modules).forEach((name) => {
+                const mod = modules[name];
+                if (mod.initialized && mod.resize) mod.resize(w, h);
+            });
+        }
+
+        function notifyContextRestored() {
+            Object.keys(modules).forEach((name) => {
+                const mod = modules[name];
+                if (mod.initialized && mod.onContextRestored) mod.onContextRestored();
+            });
+        }
+
+        function notifyVisibilityChange(hidden) {
+            const mod = activeName && modules[activeName];
+            if (mod && mod.onVisibilityChange) mod.onVisibilityChange(hidden);
+        }
+
+        return { register, enter, update, resize, notifyContextRestored, notifyVisibilityChange, get active() { return activeName; } };
+    })();
+
+    /* ==========================================================================
+       MODULE: VIEWPORT / RESIZE ORCHESTRATOR (P0-5, P1-5 support)
+       Single debounced resize + orientationchange source for the whole page.
+       Coarse-pointer height-only deltas under ~120px are ignored outright — this
+       is specifically the iOS/Android URL-bar collapse-on-scroll case, which was
+       previously causing five separate listeners to reallocate four GPU
+       framebuffers on every scroll gesture.
+       ========================================================================== */
+    const Viewport = (() => {
+        let w = window.innerWidth;
+        let h = window.innerHeight;
+        let resizeTimer = null;
+        let resizeRaf = null;
+        const coarse = window.matchMedia('(pointer: coarse)').matches;
+        const listeners = [];
+
+        function apply(newW, newH) {
+            w = newW; h = newH;
+            AppRenderer.setSize(w, h);
+            AppModules.resize(w, h);
+            listeners.forEach((fn) => fn(w, h));
+        }
+
+        function handleResize() {
+            const newW = window.innerWidth;
+            const newH = window.innerHeight;
+            const heightDelta = Math.abs(newH - h);
+            const widthDelta = Math.abs(newW - w);
+            if (coarse && widthDelta === 0 && heightDelta < 120) {
+                return; // URL bar show/hide — not a real resize
+            }
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (resizeRaf) cancelAnimationFrame(resizeRaf);
+                resizeRaf = requestAnimationFrame(() => apply(window.innerWidth, window.innerHeight));
+            }, 150);
+        }
+
+        window.addEventListener('resize', handleResize, { passive: true });
+
+        window.addEventListener('orientationchange', () => {
+            Quality.recompute();
+            AppRenderer.applyPixelRatio();
+            // Let the browser settle dimensions/toolbars before reading them.
+            setTimeout(() => apply(window.innerWidth, window.innerHeight), 250);
         });
 
-        // --- State ---
-        let isActive = false;
-        let audioContext, analyser, dataArray;
-        let audioStream = null;
-        let resetTimeout, finalResetTimeout;
+        return {
+            get width() { return w; },
+            get height() { return h; },
+            onChange(fn) { listeners.push(fn); }
+        };
+    })();
 
-        // --- Three.js Setup ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = 6;
+    /* ==========================================================================
+       MODULE: FRAME LOOP (P1-2, P2-9)
+       One requestAnimationFrame chain for the entire page. dt is clamped to a
+       maximum of 1/30s, which (as a side effect) fixes F10: previously,
+       re-entering Echo after being away resumed an un-reset wall clock, so the
+       first delta could be arbitrarily large and skip the whole 2.9s arrival
+       animation in one tick. Pauses entirely on document.hidden.
+       ========================================================================== */
+    let lastFrameTime = performance.now();
+    let rafId = null;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        canvasContainer.appendChild(renderer.domElement);
+    function frameTick(now) {
+        rafId = requestAnimationFrame(frameTick);
+        const dt = Math.min((now - lastFrameTime) / 1000, 1 / 30);
+        lastFrameTime = now;
+        const t0 = performance.now();
+        AppModules.update(dt);
+        const t1 = performance.now();
+        AppRenderer.reportFrameTime(t1 - t0);
+    }
 
-        // --- Shader Material ---
-        const vertexShader = `
-            uniform float uTime;
-            uniform float uAudio;
-            varying vec3 vPos;
+    function startLoop() {
+        lastFrameTime = performance.now();
+        if (rafId == null) rafId = requestAnimationFrame(frameTick);
+    }
+    function stopLoop() {
+        if (rafId != null) cancelAnimationFrame(rafId);
+        rafId = null;
+    }
 
-            vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
-            vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-            float snoise(vec3 v){ 
-                const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-                const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-                vec3 i  = floor(v + dot(v, C.yyy) );
-                vec3 x0 = v - i + dot(i, C.xxx) ;
-                vec3 g = step(x0.yzx, x0.xyz);
-                vec3 l = 1.0 - g;
-                vec3 i1 = min( g.xyz, l.zxy );
-                vec3 i2 = max( g.xyz, l.zxy );
-                vec3 x1 = x0 - i1 + 1.0 * C.xxx;
-                vec3 x2 = x0 - i2 + 2.0 * C.xxx;
-                vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
-                i = mod(i, 289.0 ); 
-                vec4 p = permute( permute( permute( 
-                            i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-                        + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
-                        + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-                float n_ = 1.0/7.0;
-                vec3  ns = n_ * D.wyz - D.xzx;
-                vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
-                vec4 x_ = floor(j * ns.z);
-                vec4 y_ = floor(j - 7.0 * x_ );
-                vec4 x = x_ *ns.x + ns.yyyy;
-                vec4 y = y_ *ns.x + ns.yyyy;
-                vec4 h = 1.0 - abs(x) - abs(y);
-                vec4 b0 = vec4( x.xy, y.xy );
-                vec4 b1 = vec4( x.zw, y.zw );
-                vec4 s0 = floor(b0)*2.0 + 1.0;
-                vec4 s1 = floor(b1)*2.0 + 1.0;
-                vec4 sh = -step(h, vec4(0.0));
-                vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-                vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-                vec3 p0 = vec3(a0.xy,h.x);
-                vec3 p1 = vec3(a0.zw,h.y);
-                vec3 p2 = vec3(a1.xy,h.z);
-                vec3 p3 = vec3(a1.zw,h.w);
-                vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-                p0 *= norm.x;
-                p1 *= norm.y;
-                p2 *= norm.z;
-                p3 *= norm.w;
-                vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-                m = m * m;
-                return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
-            }
-
-            void main() {
-                vPos = position;
-                vec3 pos = position;
-                vec3 normal = normalize(pos);
-
-                float noiseFreq = 0.5; 
-                float noiseAmp = 0.04 + (uAudio * 0.2); 
-                vec3 noisePos = vec3(pos.x * noiseFreq + uTime * 0.2, pos.y * noiseFreq + uTime * 0.3, pos.z * noiseFreq);
-                float noise = snoise(noisePos) * noiseAmp;
-
-                // Apply shape distortion
-                pos += normal * noise;
-                
-                // Increased expansion by 130% (0.40 -> 0.92)
-                pos *= 1.0 + (uAudio * 0.92);
-
-                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                gl_Position = projectionMatrix * mvPosition;
-
-                gl_PointSize = 2.0 * (10.0 / -mvPosition.z);
-            }
-        `;
-
-        const fragmentShader = `
-            uniform float uTime;
-            uniform float uTreble;
-            varying vec3 vPos;
-
-            void main() {
-                vec2 coord = gl_PointCoord - vec2(0.5);
-                if (length(coord) > 0.5) discard;
-
-                // Base color
-                vec3 baseColor = vec3(1.0, 1.0, 1.0);
-
-                // 4-Color Palette (Red, Orange, Purple, Cyan)
-                vec3 colorRed = vec3(1.0, 0.1, 0.2); 
-                vec3 colorOrange = vec3(1.0, 0.5, 0.0); 
-                vec3 colorPurple = vec3(0.6, 0.1, 0.9); 
-                vec3 colorCyan = vec3(0.0, 0.8, 1.0);
-                
-                // Create a volumetric 4-way gradient using X, Y, and Z coordinates
-                float mixFactor1 = sin(vPos.x * 4.0 + uTime * 2.5) * 0.5 + 0.5;
-                float mixFactor2 = cos(vPos.y * 4.0 - uTime * 2.0) * 0.5 + 0.5;
-                float mixFactor3 = sin(vPos.z * 4.0 + uTime * 1.5) * 0.5 + 0.5;
-                
-                vec3 grad1 = mix(colorRed, colorOrange, mixFactor1);
-                vec3 grad2 = mix(colorPurple, colorCyan, mixFactor2);
-                vec3 gradColor = mix(grad1, grad2, mixFactor3);
-
-                // Apply treble effect
-                float trebleEffect = smoothstep(0.1, 0.7, uTreble * 3.5); 
-                vec3 finalColor = mix(baseColor, gradColor, trebleEffect);
-
-                float alpha = smoothstep(0.5, 0.1, length(coord));
-                gl_FragColor = vec4(finalColor, alpha * 0.8);
-            }
-        `;
-
-        // --- Random Spherical Distribution ---
-        const particleCount = 12000;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-
-        for(let i = 0; i < particleCount; i++) {
-            const u = Math.random();
-            const v = Math.random();
-            const theta = u * 2.0 * Math.PI;
-            const phi = Math.acos(2.0 * v - 1.0);
-            
-            // Radius reduced by 30%
-            const r = 0.77; 
-
-            positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
-            positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-            positions[i*3+2] = r * Math.cos(phi);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopLoop();
+        } else {
+            startLoop();
         }
+        AppModules.notifyVisibilityChange(document.hidden);
+    });
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        
-        const material = new THREE.ShaderMaterial({
-            vertexShader,
-            fragmentShader,
-            uniforms: {
-                uTime: { value: 0 },
-                uAudio: { value: 0 },
-                uTreble: { value: 0 }
-            },
-            transparent: true,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending
+    startLoop();
+
+    /* ==========================================================================
+       MODULE: ROUTING & NAVIGATION
+       ========================================================================== */
+    window.currentView = 'home';
+
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const header = document.getElementById('main-header');
+
+    const homeView = document.getElementById('home-view');
+    const contactView = document.getElementById('contact-view');
+    const echoView = document.getElementById('echo-view');
+    const pulseView = document.getElementById('pulse-view');
+
+    function switchView(view) {
+        window.currentView = view;
+
+        homeView.style.display = view === 'home' ? 'flex' : 'none';
+        contactView.style.display = view === 'contact' ? 'block' : 'none';
+        echoView.style.display = view === 'echo' ? 'block' : 'none';
+        pulseView.style.display = view === 'pulse' ? 'block' : 'none';
+
+        if (view === 'home') {
+            document.body.style.height = '100dvh';
+            document.body.style.overflow = 'hidden';
+        } else if (view === 'contact') {
+            document.body.style.height = '100dvh';
+            document.body.style.overflow = 'hidden';
+        } else if (view === 'echo') {
+            document.body.style.height = '1000vh';
+            document.body.style.overflowX = 'hidden';
+            document.body.style.overflowY = 'auto';
+        } else if (view === 'pulse') {
+            document.body.style.height = 'auto';
+            document.body.style.overflowX = 'hidden';
+            document.body.style.overflowY = 'auto';
+        }
+        window.scrollTo(0, 0);
+
+        // DOM display is set first, THEN the module is entered, so any layout
+        // measurement a module does on enter() (e.g. Contact's keep-out zones)
+        // reads real, laid-out geometry rather than a display:none box.
+        AppModules.enter(view);
+    }
+
+    function closeMobileMenu() {
+        hamburger.classList.remove('is-active');
+        hamburger.setAttribute('aria-expanded', 'false');
+        mobileMenu.classList.remove('is-open');
+        header.classList.remove('menu-open');
+        document.body.style.overflow = window.currentView === 'home' || window.currentView === 'contact' ? 'hidden' : 'auto';
+    }
+
+    hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('is-active');
+        hamburger.setAttribute('aria-expanded', String(isOpen));
+        mobileMenu.classList.toggle('is-open');
+        header.classList.toggle('menu-open');
+        if (isOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = window.currentView === 'home' || window.currentView === 'contact' ? 'hidden' : 'auto';
+    });
+
+    document.getElementById('nav-logo').addEventListener('click', () => switchView('home'));
+    document.getElementById('nav-home-desktop').addEventListener('click', () => switchView('home'));
+    document.getElementById('nav-home-mobile').addEventListener('click', () => { closeMobileMenu(); switchView('home'); });
+
+    document.getElementById('nav-echo-desktop').addEventListener('click', () => switchView('echo'));
+    document.getElementById('nav-echo-mobile').addEventListener('click', () => { closeMobileMenu(); switchView('echo'); });
+
+    document.getElementById('nav-pulse-desktop').addEventListener('click', () => switchView('pulse'));
+    document.getElementById('nav-pulse-mobile').addEventListener('click', () => { closeMobileMenu(); switchView('pulse'); });
+
+    document.getElementById('nav-contact-desktop').addEventListener('click', () => switchView('contact'));
+    document.getElementById('nav-contact-mobile').addEventListener('click', () => { closeMobileMenu(); switchView('contact'); });
+
+    document.getElementById('home-pulse-btn').addEventListener('click', (e) => { e.stopPropagation(); switchView('pulse'); });
+    document.getElementById('home-echo-btn').addEventListener('click', (e) => { e.stopPropagation(); switchView('echo'); });
+
+    // Dynamic Edge Light for Glass Buttons
+    document.querySelectorAll('.glass-btn').forEach((btn) => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            btn.style.setProperty('--x', `${e.clientX - rect.left}px`);
+            btn.style.setProperty('--y', `${e.clientY - rect.top}px`);
         });
+    });
 
-        const orb = new THREE.Points(geometry, material);
-        scene.add(orb);
+    // Header Visibility Logic
+    let scrollTimeout;
+    let isHeaderHovered = false;
 
-        // --- Audio Setup ---
-        async function setupAudio() {
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                
-                const source = audioContext.createMediaStreamSource(audioStream);
-                source.connect(analyser);
-                
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            } catch (err) {
-                console.log("Microphone access denied. Running idle animation.");
-            }
+    header.addEventListener('mouseenter', () => isHeaderHovered = true);
+    header.addEventListener('mouseleave', () => {
+        isHeaderHovered = false;
+        if (window.scrollY > 50 && !mobileMenu.classList.contains('is-open')) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (!isHeaderHovered) header.classList.remove('is-visible');
+            }, 10000);
         }
+    });
 
-        function stopAudio() {
-            if (audioStream) {
-                audioStream.getTracks().forEach(track => track.stop());
-                audioStream = null;
-            }
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-        }
-
-        // --- Interaction Logic ---
-        btnWake.addEventListener('click', () => {
-            if (isActive) return;
-            isActive = true;
-
-            clearTimeout(resetTimeout);
-            clearTimeout(finalResetTimeout);
-            comingSoon.classList.remove('pulsing');
-
-            // UI Transitions
-            logoCenter.classList.remove('show');
-            btnWake.classList.remove('show');
-            canvasContainer.classList.add('active');
-
-            // Fade in corner logo slightly after center fades out
-            setTimeout(() => {
-                if(isActive) logoCorner.classList.add('active');
-            }, 800);
-
-            // Start Audio & Animation
-            setupAudio();
-
-            // Set 20 second reset timer
-            resetTimeout = setTimeout(triggerEndingSequence, 20000);
-        });
-
-        function triggerEndingSequence() {
-            // Fade out orb and corner logo
-            canvasContainer.classList.remove('active');
-            logoCorner.classList.remove('active');
-            
-            // Fade in Center Logo and Coming Soon
-            setTimeout(() => {
-                logoCenter.classList.add('show');
-                comingSoon.classList.add('pulsing');
-            }, 1000);
-
-            stopAudio();
-
-            // Let it pulse for 5 seconds, then fully reset
-            finalResetTimeout = setTimeout(() => {
-                comingSoon.classList.remove('pulsing');
-                btnWake.classList.add('show');
-                isActive = false;
-            }, 6000);
-        }
-
-        // --- Animation Loop ---
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const elapsedTime = clock.getElapsedTime();
-            material.uniforms.uTime.value = elapsedTime;
-
-            orb.rotation.y = elapsedTime * 0.08;
-            orb.rotation.z = elapsedTime * 0.04;
-
-            if (isActive && analyser && dataArray) {
-                analyser.getByteFrequencyData(dataArray);
-                
-                // --- Bass Analysis (Controls Expansion) ---
-                let bassSum = 0;
-                const bassRange = 20; 
-                for (let i = 0; i < bassRange; i++) {
-                    bassSum += dataArray[i];
+    window.addEventListener('scroll', () => {
+        if (mobileMenu.classList.contains('is-open')) return;
+        header.classList.add('is-visible');
+        clearTimeout(scrollTimeout);
+        if (window.scrollY > 50) {
+            scrollTimeout = setTimeout(() => {
+                if (!mobileMenu.classList.contains('is-open') && !isHeaderHovered) {
+                    header.classList.remove('is-visible');
                 }
-                let bassAverage = bassSum / bassRange;
-                let audioValue = bassAverage / 255;
-                material.uniforms.uAudio.value += (audioValue - material.uniforms.uAudio.value) * 0.1; 
+            }, 10000);
+        }
+    }, { passive: true });
 
-                // --- Treble Analysis (Controls Color) ---
-                let trebleSum = 0;
-                const trebleStart = 40; 
-                const trebleEnd = 100;
-                for (let i = trebleStart; i < trebleEnd; i++) {
-                    trebleSum += dataArray[i];
+    /* ==========================================================================
+       MODULE: LEGAL MODAL LOGIC
+       ========================================================================== */
+    const legalModal = document.getElementById('legal-modal-overlay');
+    const legalClose = document.querySelector('.modal-close');
+    const modalContainer = document.querySelector('.modal-container');
+
+    function openModal() { legalModal.classList.add('is-open'); }
+    function closeModal() { legalModal.classList.remove('is-open'); }
+
+    document.getElementById('nav-legal-desktop').addEventListener('click', openModal);
+    document.getElementById('nav-legal-mobile').addEventListener('click', () => { closeMobileMenu(); openModal(); });
+
+    legalClose.addEventListener('click', closeModal);
+    legalModal.addEventListener('click', (e) => {
+        if (e.target === legalModal || e.target.classList.contains('modal-sway-wrapper')) closeModal();
+    });
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && legalModal.classList.contains('is-open')) closeModal();
+    });
+
+    modalContainer.addEventListener('mousemove', (e) => {
+        const rect = modalContainer.getBoundingClientRect();
+        modalContainer.style.setProperty('--x', `${e.clientX - rect.left}px`);
+        modalContainer.style.setProperty('--y', `${e.clientY - rect.top}px`);
+    });
+
+    /* ==========================================================================
+       MODULE: SHARED VIDEO LIFECYCLE HELPERS (P0-9 support / P2-9)
+       Small registry so the global visibilitychange handler can pause every
+       currently-playing <video> without each module re-implementing it.
+       ========================================================================== */
+    const ManagedVideos = (() => {
+        const set = new Set();
+        function track(el) { set.add(el); return el; }
+        function pauseAll() { set.forEach((v) => { if (!v.paused) v.pause(); }); }
+        return { track, pauseAll };
+    })();
+
+    /* ==========================================================================
+       MODULE: HOME WEBGL SYSTEM
+       ========================================================================== */
+    AppModules.register('home', {
+        zIndex: 1,
+        instantCanvasFade: true,
+
+        init() {
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+            this.camera.position.z = 400;
+
+            const particleCount = Math.max(64, Math.round(CONFIG.home.orbParticleCount * Quality.current.particleScale));
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            const phases = new Float32Array(particleCount);
+            const speeds = new Float32Array(particleCount);
+
+            const maxRadius = 76.5;
+            for (let i = 0; i < particleCount; i++) {
+                let r;
+                const rand = Math.random();
+                if (rand < 0.85) {
+                    const minR3 = Math.pow(maxRadius * 0.49, 3);
+                    const maxR3 = Math.pow(maxRadius * 0.85, 3);
+                    r = Math.cbrt(minR3 + Math.random() * (maxR3 - minR3));
+                } else {
+                    const minR3 = Math.pow(maxRadius * 0.85, 3);
+                    const maxR3 = Math.pow(maxRadius, 3);
+                    r = Math.cbrt(minR3 + Math.random() * (maxR3 - minR3));
                 }
-                let trebleAverage = trebleSum / (trebleEnd - trebleStart);
-                let trebleValue = trebleAverage / 255;
-                material.uniforms.uTreble.value += (trebleValue - material.uniforms.uTreble.value) * 0.2;
+                const theta = Math.random() * 2 * Math.PI;
+                const phi = Math.acos(2 * Math.random() - 1);
+                positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+                positions[i * 3 + 2] = r * Math.cos(phi);
 
+                let sizeRand = Math.random();
+                if (sizeRand < 0.4) sizes[i] = 3.78;
+                else if (sizeRand < 0.8) sizes[i] = 4.9;
+                else sizes[i] = 9.66;
+
+                phases[i] = Math.random() * Math.PI * 2;
+                speeds[i] = 0.5 + Math.random() * 1.5;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+            geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
+
+            this.material = new THREE.ShaderMaterial({
+                uniforms: { uTime: { value: 0 }, uScale: { value: new THREE.Vector3(1, 1, 1) }, uPushXY: { value: 0 }, uPullInner: { value: 0 }, uArrival: { value: 0 } },
+                vertexShader: `
+                    uniform float uTime; uniform vec3 uScale; uniform float uPushXY; uniform float uPullInner; uniform float uArrival;
+                    attribute float aSize; attribute float aPhase; attribute float aSpeed;
+                    void main() {
+                        float pulse = sin(uTime * aSpeed + aPhase);
+                        float currentSize = aSize + (pulse * aSize * 0.4);
+                        vec3 pos = position * uScale;
+                        float distXY = length(pos.xy);
+                        if (distXY > 0.0) pos.xy += (pos.xy / distXY) * uPushXY;
+                        float dist3D = length(position);
+                        if (dist3D > 0.0) {
+                            float innerFactor = smoothstep(51.0, 37.0, dist3D);
+                            vec3 origDir = normalize(position);
+                            float yBias = mix(3.5, 2.5, (origDir.y + 1.0) * 0.5);
+                            pos -= origDir * (uPullInner * yBias * innerFactor);
+                        }
+                        pos.x += sin(uTime * 0.3 + aPhase) * 3.0; pos.y += cos(uTime * 0.4 + aPhase) * 3.0; pos.z += sin(uTime * 0.35 + aPhase) * 3.0;
+
+                        vec3 startPos = pos * 3.0 + vec3(0.0, 0.0, 600.0);
+                        pos = mix(startPos, pos, uArrival);
+
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_PointSize = currentSize * (400.0 / -mvPosition.z);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    void main() {
+                        vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                        float ll = length(xy);
+                        if (ll > 0.5) discard;
+                        float alpha = smoothstep(0.5, 0.1, ll) * 0.8;
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+                    }
+                `,
+                transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            });
+
+            this.orb = new THREE.Points(geometry, this.material);
+            this.scene.add(this.orb);
+            this.elapsed = 0;
+
+            // Scroll-driven open/close state machine (replaces the old three-stage
+            // tap/click sequence). 'closed' = resting orb; 'open' = expanded orb with
+            // the reveal text visible. isAnimating locks out re-triggering mid-tween so
+            // one continuous scroll gesture (many wheel/touchmove events) only fires
+            // the transition once, per the "scroll down once" / "scroll up once" spec.
+            this.state = 'closed';
+            this.isAnimating = false;
+
+            this.scrollIndicator = document.getElementById('home-scroll-indicator');
+            this.revealContent = document.getElementById('home-reveal-content');
+            this.homeViewEl = homeView;
+
+            const handleWheel = (e) => {
+                if (window.currentView !== 'home') return;
+                if (e.deltaY > 15) this.triggerOpen();
+                else if (e.deltaY < -15) this.triggerClose();
+            };
+            this.homeViewEl.addEventListener('wheel', handleWheel, { passive: true });
+
+            // Touch devices have no wheel event — a vertical swipe is the touch
+            // equivalent of "scroll". Swipe up (content moves up) = scroll down;
+            // swipe down = scroll up.
+            let touchStartY = null;
+            this.homeViewEl.addEventListener('touchstart', (e) => {
+                if (window.currentView !== 'home') return;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            this.homeViewEl.addEventListener('touchend', (e) => {
+                if (window.currentView !== 'home' || touchStartY === null) return;
+                const deltaY = touchStartY - e.changedTouches[0].clientY;
+                touchStartY = null;
+                if (deltaY > 30) this.triggerOpen();
+                else if (deltaY < -30) this.triggerClose();
+            }, { passive: true });
+
+            // Keyboard equivalent, at negligible cost.
+            window.addEventListener('keydown', (e) => {
+                if (window.currentView !== 'home') return;
+                if (e.key === 'ArrowDown' || e.key === 'PageDown') this.triggerOpen();
+                else if (e.key === 'ArrowUp' || e.key === 'PageUp') this.triggerClose();
+            });
+        },
+
+        showIndicator() {
+            if (window.currentView !== 'home' || this.state !== 'closed') return;
+            this.scrollIndicator.classList.add('is-visible');
+        },
+
+        hideIndicator() {
+            this.scrollIndicator.classList.remove('is-visible');
+        },
+
+        triggerOpen() {
+            if (this.state !== 'closed' || this.isAnimating) return;
+            this.isAnimating = true;
+            this.state = 'open';
+            this.hideIndicator();
+
+            const u = this.material.uniforms;
+            gsap.killTweensOf([u.uScale.value, u.uPushXY, u.uPullInner, this.camera.position]);
+
+            gsap.to(u.uScale.value, { x: 1.55, y: 1.55, z: 1.55, duration: 2.0, ease: "power2.out", overwrite: "auto" });
+            gsap.to(u.uPushXY, { value: 90.0, duration: 2.0, ease: "power2.out", overwrite: "auto" });
+            gsap.to(u.uPullInner, {
+                value: 32.0, duration: 2.0, ease: "power2.out", overwrite: "auto",
+                onComplete: () => { this.isAnimating = false; }
+            });
+            gsap.to(this.camera.position, { z: 180, duration: 2.0, ease: "power2.out", overwrite: "auto" });
+
+            gsap.fromTo(".reveal-text", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 1.3, ease: "power3.out", delay: 0.9 });
+            gsap.to("#home-reveal-content", { opacity: 1, duration: 1.3, ease: "power2.out", delay: 0.9 });
+            this.revealContent.classList.add('is-visible');
+        },
+
+        triggerClose() {
+            if (this.state !== 'open' || this.isAnimating) return;
+            this.isAnimating = true;
+            this.state = 'closed';
+
+            const u = this.material.uniforms;
+            gsap.killTweensOf([u.uScale.value, u.uPushXY, u.uPullInner, this.camera.position]);
+            gsap.killTweensOf([".reveal-text", "#home-reveal-content"]);
+
+            gsap.to(".reveal-text", { opacity: 0, scale: 0.85, duration: 0.5, ease: "power2.in" });
+            gsap.to("#home-reveal-content", {
+                opacity: 0, duration: 0.5, ease: "power2.in",
+                onComplete: () => { this.revealContent.classList.remove('is-visible'); }
+            });
+
+            gsap.to(u.uScale.value, { x: 1, y: 1, z: 1, duration: 1.8, ease: "power2.inOut", overwrite: "auto" });
+            gsap.to(u.uPushXY, { value: 0, duration: 1.8, ease: "power2.inOut", overwrite: "auto" });
+            gsap.to(u.uPullInner, { value: 0, duration: 1.8, ease: "power2.inOut", overwrite: "auto" });
+            gsap.to(this.camera.position, {
+                z: 400, duration: 1.8, ease: "power2.inOut", overwrite: "auto",
+                onComplete: () => {
+                    this.isAnimating = false;
+                    this.showIndicator();
+                }
+            });
+        },
+
+        enter() {
+            this.state = 'closed';
+            this.isAnimating = false;
+            const u = this.material.uniforms;
+            gsap.killTweensOf(u.uScale.value);
+            gsap.killTweensOf(u.uPushXY);
+            gsap.killTweensOf(u.uPullInner);
+            gsap.killTweensOf(this.camera.position);
+            gsap.killTweensOf(u.uArrival);
+
+            u.uScale.value.set(1, 1, 1);
+            u.uPushXY.value = 0;
+            u.uPullInner.value = 0;
+            this.camera.position.z = 400;
+            u.uArrival.value = 0;
+
+            this.revealContent.classList.remove('is-visible');
+            gsap.set("#home-reveal-content", { opacity: 0 });
+            gsap.set(".reveal-text", { opacity: 0, scale: 0.85 });
+            this.hideIndicator();
+
+            gsap.to(u.uArrival, { value: 1, duration: 2.5, ease: "power3.out" });
+            AppRenderer.show();
+            // "Right after the particle orb has settled" — the arrival tween above
+            // runs 2.5s; wait slightly past that before fading the indicator in.
+            setTimeout(() => this.showIndicator(), 2600);
+        },
+
+        update(dt) {
+            this.elapsed += dt;
+            this.material.uniforms.uTime.value = this.elapsed;
+            AppRenderer.renderer.render(this.scene, this.camera);
+        },
+
+        resize(w, h) {
+            this.camera.aspect = w / h;
+            this.camera.updateProjectionMatrix();
+        }
+    });
+
+    /* ==========================================================================
+       MODULE: CONTACT WEBGL SYSTEM
+       ========================================================================== */
+    AppModules.register('contact', {
+        zIndex: 1,
+        instantCanvasFade: true,
+
+        init() {
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
+            // P2-3: this now matches Pulse's (correct) pixel<->world mapping instead of a
+            // fixed z=1000, so the explosion origin tracks the pointer at every viewport size.
+            this.camera.position.z = (window.innerHeight / 2) / Math.tan((this.camera.fov * Math.PI / 180) / 2);
+
+            const pCount = Math.max(64, Math.round(CONFIG.contact.particleCount * Quality.current.particleScale));
+            this.pCount = pCount;
+            this.geometry = new THREE.BufferGeometry();
+            this.positions = new Float32Array(pCount * 3);
+            this.randoms = new Float32Array(pCount);
+            this.elapsed = 0;
+
+            this.material = new THREE.ShaderMaterial({
+                uniforms: { uTime: { value: 0 }, uExplosionCenter: { value: new THREE.Vector3(0, 0, 0) }, uExplosionStrength: { value: 0 }, uArrival: { value: 0 }, uMaxPointSize: { value: Quality.current.maxPointSize } },
+                vertexShader: `
+                    uniform float uTime; uniform vec3 uExplosionCenter; uniform float uExplosionStrength; uniform float uArrival; uniform float uMaxPointSize; attribute float aRandom;
+                    void main() {
+                        vec3 pos = position;
+                        pos.x += sin(uTime * 0.1575 + aRandom * 10.0) * 15.0; pos.y += cos(uTime * 0.2100 + aRandom * 10.0) * 15.0; pos.z += sin(uTime * 0.1050 + aRandom * 10.0) * 40.0;
+
+                        vec3 startPos = pos - vec3(0.0, 0.0, 1500.0);
+                        pos = mix(startPos, pos, uArrival);
+
+                        vec3 dir = pos - uExplosionCenter; float dist = length(dir);
+                        if (dist > 0.0) { dir = normalize(dir); pos += dir * (exp(-dist * 0.003) * uExplosionStrength * 600.0); }
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        /* P2-3: clamped like Pulse's sprite size — previously unclamped, so a
+                           particle drifting close to the camera could cover a very large area. */
+                        gl_PointSize = min((7.02 + aRandom * 7.02) * (1000.0 / max(-mvPosition.z, 1.0)), uMaxPointSize);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    void main() {
+                        vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                        if (length(xy) > 0.5) discard;
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.0, length(xy)) * 0.8);
+                    }
+                `,
+                transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            });
+
+            this.targetExplosionStrength = 0;
+            this.currentExplosionStrength = 0;
+            this.lastX = window.innerWidth / 2;
+            this.lastY = window.innerHeight / 2;
+
+            this.generateParticles();
+
+            const canvasEl = AppRenderer.canvas;
+            window.addEventListener('mousemove', (e) => {
+                if (window.currentView !== 'contact') return;
+                const dist = Math.hypot(e.clientX - this.lastX, e.clientY - this.lastY);
+                this.lastX = e.clientX; this.lastY = e.clientY;
+                this.material.uniforms.uExplosionCenter.value.set(e.clientX - window.innerWidth / 2, -(e.clientY - window.innerHeight / 2), 0);
+                this.targetExplosionStrength = Math.min(this.targetExplosionStrength + dist * 0.015, CONFIG.contact.explosionMaxStrength);
+            });
+
+            window.addEventListener('wheel', (e) => {
+                if (window.currentView !== 'contact') return;
+                this.targetExplosionStrength = Math.min(this.targetExplosionStrength + Math.abs(e.deltaY) * 0.005, CONFIG.contact.explosionMaxStrength);
+            }, { passive: true });
+
+            let lastTouchX = window.innerWidth / 2, lastTouchY = window.innerHeight / 2;
+            const contactViewEl = contactView;
+            contactViewEl.addEventListener('touchstart', (e) => {
+                if (window.currentView !== 'contact') return;
+                lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+                this.material.uniforms.uExplosionCenter.value.set(lastTouchX - window.innerWidth / 2, -(lastTouchY - window.innerHeight / 2), 0);
+                this.targetExplosionStrength = Math.min(this.targetExplosionStrength + 0.5, CONFIG.contact.explosionMaxStrength);
+            }, { passive: true });
+
+            contactViewEl.addEventListener('touchmove', (e) => {
+                if (window.currentView !== 'contact') return;
+                const touch = e.touches[0];
+                const dist = Math.hypot(touch.clientX - lastTouchX, touch.clientY - lastTouchY);
+                lastTouchX = touch.clientX; lastTouchY = touch.clientY;
+                this.material.uniforms.uExplosionCenter.value.set(touch.clientX - window.innerWidth / 2, -(touch.clientY - window.innerHeight / 2), 0);
+                this.targetExplosionStrength = Math.min(this.targetExplosionStrength + dist * 0.02, CONFIG.contact.explosionMaxStrength);
+            }, { passive: true });
+        },
+
+        // P2-3: keep-out zones are now measured from the live, laid-out DOM (title +
+        // buttons) instead of two hardcoded px guesses keyed off a stale isMobile flag
+        // that never re-evaluated after rotation.
+        generateParticles() {
+            const titleEl = document.querySelector('.contact-title');
+            const buttonsEl = document.querySelector('.contact-buttons');
+            const titleRect = titleEl.getBoundingClientRect();
+            const buttonsRect = buttonsEl.getBoundingClientRect();
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            const tHW = Math.max(60, titleRect.width / 2);
+            const tHH = Math.max(20, titleRect.height / 2);
+            const tCY = (titleRect.top + titleRect.height / 2) - centerY;
+            const bHW = Math.max(40, buttonsRect.width / 2);
+            const bHH = Math.max(20, buttonsRect.height / 2);
+            const bCY = (buttonsRect.top + buttonsRect.height / 2) - centerY;
+
+            const maxRadius = Math.min(window.innerWidth * 0.8, 400);
+            for (let i = 0; i < this.pCount; i++) {
+                let x, y, z, valid = false;
+                let guard = 0;
+                while (!valid && guard < 50) {
+                    guard++;
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.pow(Math.random(), 0.6) * maxRadius;
+                    x = Math.cos(angle) * radius; y = Math.sin(angle) * radius; z = (Math.random() - 0.5) * 600;
+                    const inTextZone = Math.max(0, Math.abs(x) - tHW) < 15 && Math.max(0, Math.abs(y - tCY) - tHH) < 15;
+                    const inBtnZone = Math.max(0, Math.abs(x) - bHW) < 15 && Math.max(0, Math.abs(y - bCY) - bHH) < 15;
+                    if (inTextZone || inBtnZone) {
+                        if (Math.random() < 0.08) { z = Math.random() < 0.5 ? 100 + Math.random() * 200 : -(100 + Math.random() * 200); valid = true; }
+                    } else valid = true;
+                }
+                this.positions[i * 3] = x; this.positions[i * 3 + 1] = y; this.positions[i * 3 + 2] = z;
+                this.randoms[i] = Math.random();
+            }
+
+            this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+            this.geometry.setAttribute('aRandom', new THREE.BufferAttribute(this.randoms, 1));
+            if (!this.points) {
+                this.points = new THREE.Points(this.geometry, this.material);
+                this.scene.add(this.points);
             } else {
-                material.uniforms.uAudio.value += (0 - material.uniforms.uAudio.value) * 0.05;
-                material.uniforms.uTreble.value += (0 - material.uniforms.uTreble.value) * 0.05;
+                this.geometry.attributes.position.needsUpdate = true;
+            }
+        },
+
+        enter() {
+            // Re-measure keep-out zones — cheap (a couple of rects), and correct after
+            // any rotation or reflow since generation last ran.
+            this.generateParticles();
+
+            gsap.killTweensOf(this.material.uniforms.uArrival);
+            gsap.killTweensOf(".contact-content");
+            this.material.uniforms.uArrival.value = 0;
+            document.querySelector('.contact-content').style.opacity = 0;
+
+            gsap.fromTo(this.material.uniforms.uArrival, { value: 0 }, { value: 1, duration: 3.5, ease: "back.out(1.5)" });
+            gsap.to(".contact-content", { opacity: 1, duration: 1, delay: 2.5 });
+            AppRenderer.show();
+        },
+
+        update(dt) {
+            this.elapsed += dt;
+            this.material.uniforms.uTime.value = this.elapsed;
+            this.targetExplosionStrength = decay(this.targetExplosionStrength, 0.95, dt);
+            this.currentExplosionStrength = approach(this.currentExplosionStrength, this.targetExplosionStrength, 0.04, dt);
+            this.material.uniforms.uExplosionStrength.value = this.currentExplosionStrength;
+            AppRenderer.renderer.render(this.scene, this.camera);
+        },
+
+        resize(w, h) {
+            this.camera.aspect = w / h;
+            this.camera.position.z = (h / 2) / Math.tan((this.camera.fov * Math.PI / 180) / 2);
+            this.camera.updateProjectionMatrix();
+            this.generateParticles();
+        }
+    });
+
+    /* ==========================================================================
+       MODULE: ECHO WEBGL & LOGIC
+       ========================================================================== */
+    AppModules.register('echo', {
+        zIndex: 3,
+
+        init() {
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.camera.position.set(0, 0, 3.8);
+
+            this.targetCamX = 0; this.targetCamY = 0;
+            this.currentCamX = 0; this.currentCamY = 0;
+            this.currentFov = 45;
+            this.baseCamY = 0;
+            this.gyroEnabled = false;
+            this.elapsed = 0;
+
+            const dynamicVertexStage = `
+                uniform float uTimeline; uniform float uShellRadius; uniform float uMirrorProgress; uniform float uBootProgress;
+                uniform float uBurnProgress; uniform float uArrivalProgress; uniform float uClearProgress;
+                attribute float pRandomPhase; attribute float aType; attribute vec3 aDrift; attribute vec3 aStartPos;
+                varying float vThermalState; varying float vGlowIntensity; varying float vAlpha; varying float vType;
+
+                float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+                float noise(vec3 x) {
+                    vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+                    return mix(mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x), mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+                               mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x), mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+                }
+                float fbm(vec3 p) { float f = 0.0; f += 0.5000 * noise(p); p = p * 2.02; f += 0.2500 * noise(p); p = p * 2.03; f += 0.1250 * noise(p); p = p * 2.01; f += 0.0625 * noise(p); return f; }
+
+                void main() {
+                    vType = aType; vec3 surfaceNormal = normalize(position);
+                    float constantBreath = sin(uTimeline * 1.5) * 0.0347;
+                    float bootScale = mix(0.95, 1.0, uBootProgress);
+                    float breathOutExpansion = smoothstep(0.0, 0.6, uBurnProgress) * 0.10;
+                    float burnScale = 1.0 + breathOutExpansion;
+                    float currentGrowthFactor = 1.0 + (uMirrorProgress * 0.24) + constantBreath;
+                    float dynamicRadius = uShellRadius * currentGrowthFactor * bootScale * burnScale;
+                    float strictAmplitudeCeiling = dynamicRadius * 0.05; float structuralFrequency = 1.4;
+                    float asymmetryMap = sin(surfaceNormal.x * structuralFrequency + uTimeline * 0.3) * cos(surfaceNormal.y * structuralFrequency);
+                    float currentIrregularity = asymmetryMap * strictAmplitudeCeiling * uMirrorProgress;
+                    vec3 targetPosition = surfaceNormal * (dynamicRadius + currentIrregularity);
+                    targetPosition += vec3(sin(uTimeline * 1.32 + pRandomPhase * 6.28) * 0.016, cos(uTimeline * 1.54 + pRandomPhase * 6.28) * 0.016, sin(uTimeline * 0.99 + pRandomPhase * 3.14) * 0.016);
+
+                    vec3 baselinePosition = mix(aStartPos, targetPosition, uArrivalProgress);
+
+                    float rawNoise = fbm(surfaceNormal * 3.5 + uTimeline * 0.1);
+                    float burnMask = smoothstep(0.3, 0.7, rawNoise);
+                    float sweep = uBurnProgress * 2.0; float timeSinceIgnition = max(0.0, sweep - burnMask);
+                    vAlpha = 1.0; vThermalState = 0.0; vGlowIntensity = 0.0;
+
+                    if (timeSinceIgnition > 0.0) {
+                        float lingerFactor = pRandomPhase * 0.3; float fireIntensity = 0.0;
+                        if (aType > 0.985) {
+                            fireIntensity = smoothstep(0.0, 0.08, timeSinceIgnition) * (1.0 - smoothstep(1.5, 6.0, timeSinceIgnition) * 0.5);
+                            vThermalState = fireIntensity; vGlowIntensity = fireIntensity * 1.5;
+                            vec3 driftOffset = aDrift * ((1.0 - exp(-timeSinceIgnition * 4.0)) * 1.5 + timeSinceIgnition * 1.2) * 2.5;
+                            driftOffset.x += sin(uTimeline * 0.5 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            driftOffset.y += cos(uTimeline * 0.4 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            driftOffset.z += sin(uTimeline * 0.45 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            baselinePosition += driftOffset; vAlpha = 1.0 - smoothstep(5.0, 9.0, timeSinceIgnition);
+                        } else if (aType >= 0.925) {
+                            fireIntensity = smoothstep(0.0, 0.08, timeSinceIgnition) * (1.0 - smoothstep(0.08 + lingerFactor, 0.4 + lingerFactor, timeSinceIgnition));
+                            vThermalState = fireIntensity; vGlowIntensity = fireIntensity * 1.2;
+                            vec3 driftOffset = aDrift * ((1.0 - exp(-timeSinceIgnition * 4.0)) * 1.2 + timeSinceIgnition * 0.8) * 2.0;
+                            driftOffset.x += sin(uTimeline * 0.5 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            driftOffset.y += cos(uTimeline * 0.4 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            driftOffset.z += sin(uTimeline * 0.45 + pRandomPhase * 10.0) * timeSinceIgnition * 0.1;
+                            baselinePosition += driftOffset; vAlpha = 1.0 - smoothstep(4.0, 8.0, timeSinceIgnition);
+                        } else {
+                            fireIntensity = smoothstep(0.0, 0.08, timeSinceIgnition) * (1.0 - smoothstep(0.08 + lingerFactor, 0.4 + lingerFactor, timeSinceIgnition));
+                            vThermalState = fireIntensity; vGlowIntensity = fireIntensity * 1.2;
+                            vAlpha = 1.0 - smoothstep(0.03 + lingerFactor, 0.24 + lingerFactor, timeSinceIgnition);
+                        }
+                    }
+
+                    vec4 viewSpacePosition = modelViewMatrix * vec4(baselinePosition, 1.0);
+                    if (timeSinceIgnition > 0.0 && aType >= 0.925) {
+                        float zPull = timeSinceIgnition * 0.5;
+                        if (aType > 0.985) zPull = timeSinceIgnition * 1.2;
+                        if ((aType > 0.995) || (aType > 0.980 && aType <= 0.985)) {
+                            zPull = timeSinceIgnition * 2.2;
+                            viewSpacePosition.xy = mix(viewSpacePosition.xy, vec2(sin(uTimeline * 3.0 + pRandomPhase * 10.0) * 0.25, cos(uTimeline * 3.3 + pRandomPhase * 10.0) * 0.25), smoothstep(0.0, 1.8, timeSinceIgnition));
+                        }
+                        viewSpacePosition.z += zPull;
+                    }
+                    viewSpacePosition.z += uClearProgress * 12.0;
+                    gl_Position = projectionMatrix * viewSpacePosition;
+                    float anchorSize = 28.98;
+                    if (aType < 0.925 && timeSinceIgnition > 0.05) anchorSize *= vAlpha;
+                    if (aType > 0.985) anchorSize *= 1.6;
+                    gl_PointSize = anchorSize / -viewSpacePosition.z;
+                }
+            `;
+
+            const dynamicFragmentStage = `
+                uniform float uBootProgress; uniform float uClearProgress;
+                varying float vThermalState; varying float vGlowIntensity; varying float vAlpha; varying float vType;
+                vec3 getFireColor(float state) {
+                    vec3 ashShell = vec3(0.12, 0.12, 0.12); vec3 darkRed = vec3(0.55, 0.05, 0.00); vec3 moltenOrange = vec3(0.90, 0.25, 0.00); vec3 peakGold = vec3(1.00, 0.60, 0.05);
+                    if (state < 0.30) return mix(ashShell, darkRed, smoothstep(0.0, 0.30, state));
+                    else if (state < 0.90) return mix(darkRed, moltenOrange, smoothstep(0.30, 0.90, state));
+                    else return mix(moltenOrange, peakGold, smoothstep(0.90, 1.0, state));
+                }
+                void main() {
+                    vec2 particleCoord = gl_PointCoord - vec2(0.5);
+                    if (length(particleCoord) > 0.5) discard;
+                    vec3 finalShadingColor = getFireColor(vThermalState);
+                    if (vThermalState > 0.1) finalShadingColor += vec3(0.90, 0.25, 0.00) * (vGlowIntensity * 0.40);
+                    float softEdgeAlpha = smoothstep(0.5, 0.33, length(particleCoord)) * 0.95 * uBootProgress * vAlpha * (1.0 - uClearProgress);
+                    if (softEdgeAlpha < 0.01) discard;
+                    gl_FragColor = vec4(finalShadingColor, softEdgeAlpha);
+                }
+            `;
+
+            const totalParticles = Math.max(200, Math.round(2550 * Quality.current.particleScale));
+            const structuralGeometry = new THREE.BufferGeometry();
+            const spatialCoords = new Float32Array(totalParticles * 3);
+            const randomPhases = new Float32Array(totalParticles);
+            const types = new Float32Array(totalParticles);
+            const drifts = new Float32Array(totalParticles * 3);
+            const startCoords = new Float32Array(totalParticles * 3);
+
+            let indices = Array.from({ length: totalParticles }, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
+
+            for (let i = 0; i < totalParticles; i++) {
+                let idx = indices[i];
+                const phi = Math.acos(-1 + (2 * idx) / totalParticles); const theta = Math.sqrt(totalParticles * Math.PI) * phi;
+                spatialCoords[idx * 3] = Math.cos(theta) * Math.sin(phi); spatialCoords[idx * 3 + 1] = Math.sin(theta) * Math.sin(phi); spatialCoords[idx * 3 + 2] = Math.cos(phi);
+                randomPhases[idx] = Math.random();
+                if (i < 2) types[idx] = 0.999; else if (i < 6) types[idx] = 0.990; else if (i < 8) types[idx] = 0.982; else types[idx] = Math.random() < 0.925 ? Math.random() * 0.924 : 0.925 + Math.random() * 0.05;
+                const u = Math.random(), v = Math.random(); const thetaDrift = u * 2.0 * Math.PI; const phiDrift = Math.acos(2.0 * v - 1.0); const speed = Math.random() * 0.36 + 0.12;
+                drifts[idx * 3] = speed * Math.sin(phiDrift) * Math.cos(thetaDrift); drifts[idx * 3 + 1] = speed * Math.sin(phiDrift) * Math.sin(thetaDrift); drifts[idx * 3 + 2] = speed * Math.cos(phiDrift);
+
+                startCoords[idx * 3] = (Math.random() - 0.5) * 20.0;
+                startCoords[idx * 3 + 1] = (Math.random() - 0.5) * 20.0;
+                startCoords[idx * 3 + 2] = 4.5 + Math.random() * 2.0;
             }
 
-            renderer.render(scene, camera);
+            structuralGeometry.setAttribute('position', new THREE.BufferAttribute(spatialCoords, 3));
+            structuralGeometry.setAttribute('pRandomPhase', new THREE.BufferAttribute(randomPhases, 1));
+            structuralGeometry.setAttribute('aType', new THREE.BufferAttribute(types, 1));
+            structuralGeometry.setAttribute('aDrift', new THREE.BufferAttribute(drifts, 3));
+            structuralGeometry.setAttribute('aStartPos', new THREE.BufferAttribute(startCoords, 3));
+
+            this.clusterMaterial = new THREE.ShaderMaterial({
+                vertexShader: dynamicVertexStage, fragmentShader: dynamicFragmentStage,
+                uniforms: { uTimeline: { value: 0 }, uMirrorProgress: { value: 0 }, uShellRadius: { value: 0.3915 }, uBootProgress: { value: 0 }, uBurnProgress: { value: 0 }, uArrivalProgress: { value: 0 }, uClearProgress: { value: 0 } },
+                transparent: true, depthWrite: false
+            });
+            this.organicMesh = new THREE.Points(structuralGeometry, this.clusterMaterial);
+            this.scene.add(this.organicMesh);
+
+            const atmCount = Math.max(40, Math.round(300 * Quality.current.particleScale));
+            const atmGeo = new THREE.BufferGeometry();
+            const atmPos = new Float32Array(atmCount * 3); const atmPhase = new Float32Array(atmCount); const atmState = new Float32Array(atmCount);
+            for (let i = 0; i < atmCount; i++) {
+                let x, y; do { x = (Math.random() - 0.5) * 6.0; y = (Math.random() - 0.5) * 3.5; } while (Math.abs(x) < 1.8 && Math.abs(y) < 1.0);
+                atmPos[i * 3] = x; atmPos[i * 3 + 1] = y; atmPos[i * 3 + 2] = (Math.random() - 0.5) * 2.5 + 0.5; atmPhase[i] = Math.random() * Math.PI * 2; atmState[i] = i < atmCount / 3 ? 1.0 : 0.0;
+            }
+            atmGeo.setAttribute('position', new THREE.BufferAttribute(atmPos, 3)); atmGeo.setAttribute('aPhase', new THREE.BufferAttribute(atmPhase, 1)); atmGeo.setAttribute('aState', new THREE.BufferAttribute(atmState, 1));
+
+            this.atmMat = new THREE.ShaderMaterial({
+                uniforms: { uTime: { value: 0 }, uAtmosphereProgress: { value: 0 }, uCamOffset: { value: new THREE.Vector2(0, 0) } },
+                vertexShader: `
+                    uniform float uTime; uniform vec2 uCamOffset; attribute float aPhase; attribute float aState; varying float vAlpha; varying float vState;
+                    void main() {
+                        vState = aState; vec3 pos = position;
+                        pos.x += sin(uTime * 0.105 + aPhase) * 0.8; pos.y += cos(uTime * 0.084 + aPhase) * 0.8; pos.z += sin(uTime * 0.07 + aPhase) * 0.4;
+
+                        pos.x += uCamOffset.x * (10.0 / (pos.z + 5.0));
+                        pos.y += uCamOffset.y * (10.0 / (pos.z + 5.0));
+
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0); gl_Position = projectionMatrix * mvPosition;
+                        float baseSize = 41.25 + sin(aPhase) * 15.0; if (aState > 0.5) baseSize *= 1.1;
+                        gl_PointSize = baseSize / -mvPosition.z; vAlpha = 0.4 + 0.6 * sin(uTime * 0.28 + aPhase);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float uAtmosphereProgress; varying float vAlpha; varying float vState;
+                    void main() {
+                        vec2 pt = gl_PointCoord - vec2(0.5); if (length(pt) > 0.5) discard;
+                        float core = smoothstep(0.2, 0.0, length(pt)) * vState;
+                        vec3 finalColor = mix(vec3(0.2, 0.2, 0.2), vec3(0.95, 0.35, 0.05), vState) + vec3(1.0, 0.8, 0.2) * core;
+                        gl_FragColor = vec4(finalColor, smoothstep(0.5, 0.33, length(pt)) * vAlpha * uAtmosphereProgress * mix(0.85, 1.0, vState));
+                    }
+                `,
+                transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            });
+            this.atmMesh = new THREE.Points(atmGeo, this.atmMat);
+            this.scene.add(this.atmMesh);
+
+            this.loopDuration = 20.0;
+            this.bootProgress = 0.0;
+            this.currentRotY = 0; this.currentRotZ = 0;
+            this.arrivalStarted = false; this.arrivalTimer = 0; this.canInteract = false;
+            this.targetScroll = 0; this.currentScroll = 0;
+            this.heroOpacity = 0;
+
+            // P1-5: captured once on entry, only refreshed on genuine orientation change —
+            // NOT on every scroll tick, where window.innerHeight was previously read live
+            // and shifted the whole beat timeline every time the mobile URL bar animated.
+            this.viewportHeightRef = window.innerHeight;
+
+            this.videoWrappers = document.querySelectorAll('.echo-video-card-wrapper');
+            this.landingWrapper = document.getElementById('echo-landing-wrapper');
+            this.midTextWrapper = document.getElementById('echo-mid-text-wrapper');
+            this.echoHeroVideoWrapper = document.getElementById('echo-hero-video-wrapper');
+            this.echoHeroVideo = ManagedVideos.track(document.getElementById('echo-hero-video'));
+            this.echoTapIcon = document.getElementById('echo-scroll-indicator');
+            this.echoHeroPlayBtn = document.getElementById('echo-hero-play-btn');
+            this.motionBtn = document.getElementById('echo-motion-btn');
+            this.typeWrapper = document.getElementById('echo-outro-text-wrapper');
+            this.typeEl = document.getElementById('echo-outro-text');
+            this.typeText = "It listens, It feels, It moves.";
+
+            // P1-7: cache last-written values so identical writes don't repeatedly
+            // invalidate layout/paint 60x/sec.
+            this._lastLandingTransform = null;
+            this._lastLandingOpacity = null;
+            this._lastHeroOpacity = null;
+            this._lastHeroPointerEvents = null;
+            this._lastMidOpacity = null;
+            this._lastMidTransform = null;
+            this._lastTypeOpacity = null;
+            this._lastCharCount = -1;
+            this._cardState = Array.from(this.videoWrappers).map(() => ({ display: null, transform: null, opacity: null }));
+
+            // P2-8: gyro permission is requested from an explicit, visible control shown
+            // on Echo entry, not from the very first tap anywhere on the site.
+            this.motionBtn.addEventListener('click', () => this.requestGyro());
+
+            const handleGyro = (e) => this.handleGyro(e);
+            this._handleGyro = handleGyro;
+
+            document.addEventListener('mousemove', (e) => {
+                if (window.currentView !== 'echo') return;
+                document.querySelectorAll('.echo-interactive-element').forEach((el) => {
+                    const rect = el.getBoundingClientRect();
+                    el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                    el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.currentView !== 'echo' || !this.canInteract) return;
+                this.targetScroll = window.scrollY;
+
+                if (window.scrollY > CONFIG.echo.scrollThreshold) this.echoTapIcon.style.opacity = '0';
+                else if (this.arrivalTimer >= CONFIG.echo.arrivalDuration) this.echoTapIcon.style.opacity = '1';
+
+                if (window.scrollY === 0) {
+                    this.echoHeroVideo.pause(); this.echoHeroVideo.currentTime = 0;
+                    this.updateEchoPlayBtnUI();
+                    this.videoWrappers.forEach((wrapper) => {
+                        const video = wrapper.querySelector('video');
+                        const overlay = wrapper.querySelector('.echo-cover-overlay'); const btn = wrapper.querySelector('.echo-play-button');
+                        // Resetting currentTime to 0 would also blank the first-frame
+                        // poster; nudge to 0.01 instead so the cover frame stays visible.
+                        video.pause(); video.currentTime = 0.01;
+                        if (overlay) overlay.style.opacity = '1';
+                        btn.classList.remove('is-pause'); btn.classList.add('is-play');
+                    });
+                }
+            }, { passive: true });
+
+            window.addEventListener('click', (e) => {
+                if (window.currentView !== 'echo' || !this.canInteract) return;
+                if (e.target.closest('.echo-video-card-wrapper') || e.target.closest('#echo-hero-video-wrapper') || e.target.closest('#echo-motion-btn')) return;
+                if (window.scrollY < window.innerHeight * 1.5) window.scrollBy({ top: window.innerHeight * 0.5, behavior: 'smooth' });
+            });
+
+            const toggleEchoPlay = (e) => {
+                if (e) e.stopPropagation();
+                if (this.echoHeroVideo.paused) {
+                    this.echoHeroVideo.play().catch(() => {});
+                } else {
+                    this.echoHeroVideo.pause();
+                }
+                this.updateEchoPlayBtnUI();
+            };
+            this.echoHeroPlayBtn.addEventListener('click', toggleEchoPlay);
+            this.echoHeroVideo.addEventListener('click', toggleEchoPlay);
+            // P0-8: preload="none" — load on demand, first time the hero is actually played.
+            this.echoHeroVideo.addEventListener('play', () => {
+                if (this.echoHeroVideo.preload === 'none') this.echoHeroVideo.preload = 'auto';
+            }, { once: true });
+
+            this.videoWrappers.forEach((wrapper) => {
+                const video = ManagedVideos.track(wrapper.querySelector('video'));
+                // First-frame cover art: preload="metadata" fetches just enough for the
+                // browser to decode a frame, but some browsers (notably Chrome) won't
+                // paint it until currentTime is nudged forward once metadata is ready.
+                video.addEventListener('loadedmetadata', () => {
+                    if (video.currentTime === 0) { try { video.currentTime = 0.01; } catch (err) {} }
+                }, { once: true });
+
+                wrapper.addEventListener('click', () => {
+                    const overlay = wrapper.querySelector('.echo-cover-overlay'); const btn = wrapper.querySelector('.echo-play-button');
+                    if (video.preload !== 'auto') video.preload = 'auto';
+                    if (video.paused) {
+                        video.play().catch(() => {});
+                        if (overlay) overlay.style.opacity = '0';
+                        btn.classList.remove('is-play'); btn.classList.add('is-pause');
+                    } else {
+                        video.pause();
+                        if (overlay) overlay.style.opacity = '1';
+                        btn.classList.remove('is-pause'); btn.classList.add('is-play');
+                    }
+                });
+            });
+
+            this.updateLayout();
+        },
+
+        requestGyro() {
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced || !Quality.current.gyro) { this.motionBtn.classList.remove('is-visible'); return; }
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then((permissionState) => {
+                    if (permissionState === 'granted') { window.addEventListener('deviceorientation', this._handleGyro); this.gyroEnabled = true; }
+                    this.motionBtn.classList.remove('is-visible');
+                }).catch(() => { this.motionBtn.classList.remove('is-visible'); });
+            } else {
+                window.addEventListener('deviceorientation', this._handleGyro); this.gyroEnabled = true;
+                this.motionBtn.classList.remove('is-visible');
+            }
+        },
+
+        // P2-8: axis mapping now accounts for screen orientation. In landscape, beta/gamma
+        // swap physical meaning relative to the page's X/Y — previously ignored, so
+        // parallax responded to the wrong tilt direction once rotated.
+        handleGyro(e) {
+            let pitch = Math.max(-45, Math.min(45, e.beta || 0));
+            let roll = Math.max(-45, Math.min(45, e.gamma || 0));
+            const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+            if (Math.abs(angle) === 90) {
+                const swapped = pitch; pitch = angle === 90 ? -roll : roll; roll = angle === 90 ? swapped : -swapped;
+            }
+            this.targetCamX = roll / 45;
+            this.targetCamY = pitch / 45;
+        },
+
+        updateEchoPlayBtnUI() {
+            const playIcon = document.querySelector('#echo-hero-play-btn .echo-icon-play');
+            const pauseIcon = document.querySelector('#echo-hero-play-btn .echo-icon-pause');
+            if (this.echoHeroVideo.paused) {
+                playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
+                this.echoHeroPlayBtn.classList.remove('is-pause'); this.echoHeroPlayBtn.classList.add('is-play');
+            } else {
+                playIcon.style.display = 'none'; pauseIcon.style.display = 'block';
+                this.echoHeroPlayBtn.classList.remove('is-play'); this.echoHeroPlayBtn.classList.add('is-pause');
+            }
+        },
+
+        updateLayout() {
+            const w = window.innerWidth, h = window.innerHeight;
+            this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
+            const vFov = this.camera.fov * Math.PI / 180;
+            const visibleHeight = 2 * Math.tan(vFov / 2) * this.camera.position.z;
+
+            let orbY = 0, camLookY = 0;
+            if (w >= CONFIG.breakpoints.desktopMin) { orbY = -visibleHeight * 0.15; camLookY = 0; }
+            else { orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; }
+
+            this.baseCamY = camLookY;
+            this.organicMesh.position.x = 0; this.organicMesh.position.y = orbY;
+            this.clusterMaterial.uniforms.uShellRadius.value = w < CONFIG.breakpoints.desktopMin ? 0.3915 : 0.52;
+        },
+
+        enter() {
+            this.bootProgress = 0.0; this.arrivalTimer = 0; this.arrivalStarted = false; this.canInteract = false;
+            this.targetScroll = 0; this.currentScroll = 0; this.heroOpacity = 0;
+            this.viewportHeightRef = window.innerHeight; // P1-5: fresh reference each entry
+            document.getElementById('echo-intro-text').classList.remove('visible');
+            document.getElementById('echo-title-text').classList.remove('visible', 'echo-flow-gradient');
+            this.echoTapIcon.style.opacity = '0';
+            this.clusterMaterial.uniforms.uArrivalProgress.value = 0.0;
+            this._lastCharCount = -1;
+            this.typeEl.textContent = '';
+
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!this.gyroEnabled && Quality.current.gyro && !reduced) {
+                this.motionBtn.classList.add('is-visible');
+            }
+
+            setTimeout(() => { if (window.currentView === 'echo') document.getElementById('echo-intro-text').classList.add('visible'); }, 260);
+            setTimeout(() => { if (window.currentView === 'echo') { const title = document.getElementById('echo-title-text'); title.classList.add('visible', 'echo-flow-gradient'); } }, 910);
+            setTimeout(() => { if (window.currentView === 'echo') this.arrivalStarted = true; }, 1800);
+            setTimeout(() => { if (window.currentView === 'echo') this.canInteract = true; }, 4000);
+
+            AppRenderer.show();
+        },
+
+        exit() {
+            this.motionBtn.classList.remove('is-visible');
+        },
+
+        resize(w, h) {
+            this.updateLayout();
+        },
+
+        update(dt) {
+            this.elapsed += dt;
+
+            if (this.bootProgress < 1.0) { this.bootProgress += dt * 1.15; if (this.bootProgress > 1.0) this.bootProgress = 1.0; }
+            if (this.canInteract) {
+                this.currentScroll = approach(this.currentScroll, this.targetScroll, this.targetScroll < this.currentScroll ? 0.065 : 0.05, dt);
+            }
+
+            // P1-5: normalized against a stable reference height, not the live (and, on
+            // mobile, constantly fluctuating) window.innerHeight.
+            let scrollP = this.currentScroll / this.viewportHeightRef;
+            let burnP = Math.min(Math.max(scrollP / 1.5, 0.0), 1.0); this.clusterMaterial.uniforms.uBurnProgress.value = burnP;
+            let clearP = Math.min(Math.max((scrollP - 1.5) / 1.0, 0.0), 1.0); this.clusterMaterial.uniforms.uClearProgress.value = clearP;
+
+            let spatialStrength = smoothstepJS(2.0, 3.0, scrollP) * (1.0 - smoothstepJS(6.0, 7.0, scrollP));
+            this.currentCamX = approach(this.currentCamX, this.targetCamX * spatialStrength, 0.05, dt);
+            this.currentCamY = approach(this.currentCamY, this.targetCamY * spatialStrength, 0.05, dt);
+
+            this.camera.position.x = this.currentCamX * 0.3;
+            this.camera.position.y = this.baseCamY + this.currentCamY * 0.3;
+            this.camera.lookAt(0, this.baseCamY, 0);
+
+            let targetFov = 45 + (Math.abs(this.currentCamX) + Math.abs(this.currentCamY)) * 2.0;
+            this.currentFov = approach(this.currentFov, targetFov, 0.05, dt);
+            this.camera.fov = this.currentFov; this.camera.updateProjectionMatrix();
+
+            // --- P1-7: diffed DOM writes below ---
+            let textOpacity = 1.0;
+            let landingTransform;
+            if (scrollP > 1.5) {
+                textOpacity = 1.0 - Math.min((scrollP - 1.5) / 0.85, 1.0);
+                landingTransform = `translateY(-${(this.currentScroll - (this.viewportHeightRef * 1.5)).toFixed(1)}px)`;
+            } else {
+                landingTransform = `translateY(0px)`;
+            }
+            if (landingTransform !== this._lastLandingTransform) { this.landingWrapper.style.transform = landingTransform; this._lastLandingTransform = landingTransform; }
+            const roundedTextOpacity = textOpacity.toFixed(3);
+            if (roundedTextOpacity !== this._lastLandingOpacity) { this.landingWrapper.style.opacity = roundedTextOpacity; this._lastLandingOpacity = roundedTextOpacity; }
+
+            let targetHeroOpacity = 0;
+            if (scrollP >= 1.0 && scrollP <= 3.0) {
+                if (scrollP < 1.5) { let p = (scrollP - 1.0) / 0.5; targetHeroOpacity = p * p * (3.0 - 2.0 * p); }
+                else if (scrollP > 2.4) { let p = (scrollP - 2.4) / 0.5; targetHeroOpacity = 1.0 - (p * p * (3.0 - 2.0 * p)); }
+                else { targetHeroOpacity = 1.0; }
+            }
+            this.heroOpacity = approach(this.heroOpacity, targetHeroOpacity, 0.1, dt);
+            const clampedHeroOpacity = Math.max(0, Math.min(1, this.heroOpacity)).toFixed(3);
+            if (clampedHeroOpacity !== this._lastHeroOpacity) { this.echoHeroVideoWrapper.style.opacity = clampedHeroOpacity; this._lastHeroOpacity = clampedHeroOpacity; }
+
+            const pointerEvents = this.heroOpacity > 0.05 ? 'auto' : 'none';
+            if (pointerEvents !== this._lastHeroPointerEvents) { this.echoHeroVideoWrapper.style.pointerEvents = pointerEvents; this._lastHeroPointerEvents = pointerEvents; }
+            if (pointerEvents === 'none' && !this.echoHeroVideo.paused && targetHeroOpacity === 0) {
+                this.echoHeroVideo.pause();
+                this.updateEchoPlayBtnUI();
+            }
+
+            let midTextOpacity = 0, midTextScale = 0.95;
+            if (scrollP >= 3.3 && scrollP <= 4.5) {
+                if (scrollP < 3.6) { midTextOpacity = (scrollP - 3.3) / 0.3; midTextScale = 0.95 + (midTextOpacity * 0.05); }
+                else if (scrollP > 4.2) { midTextOpacity = 1.0 - ((scrollP - 4.2) / 0.3); midTextScale = 1.0 + ((1.0 - midTextOpacity) * 0.05); }
+                else { midTextOpacity = 1.0; midTextScale = 1.0; }
+            }
+            const clampedMidOpacity = Math.max(0, Math.min(1, midTextOpacity)).toFixed(3);
+            if (clampedMidOpacity !== this._lastMidOpacity) { this.midTextWrapper.style.opacity = clampedMidOpacity; this._lastMidOpacity = clampedMidOpacity; }
+            const midTransform = `translate(-50%, -50%) scale(${midTextScale.toFixed(3)})`;
+            if (midTransform !== this._lastMidTransform) { this.midTextWrapper.style.transform = midTransform; this._lastMidTransform = midTransform; }
+
+            this.atmMat.uniforms.uAtmosphereProgress.value = Math.min(Math.max((scrollP - 2.6) / 1.0, 0.0), 1.0);
+            this.atmMat.uniforms.uTime.value = this.elapsed;
+            this.atmMat.uniforms.uCamOffset.value.set(this.currentCamX, this.currentCamY);
+
+            this.videoWrappers.forEach((wrapper, index) => {
+                const state = this._cardState[index];
+                const localP = scrollP - (5.0 + (index * 0.9));
+                if (localP > -2.0 && localP < 2.0) {
+                    if (state.display !== 'block') { wrapper.style.display = 'block'; state.display = 'block'; }
+                    let settledP = localP * (1.0 - (Math.pow(Math.max(0, 1.0 - Math.abs(localP) * 2.5), 2.0) * 0.85));
+                    const arcAngle = Math.PI * 0.777;
+                    const transform = `translate(-50%, -50%) translate3d(${(-Math.sin(settledP * arcAngle) * window.innerWidth * 0.65).toFixed(1)}px, ${(settledP * -window.innerHeight * 0.9).toFixed(1)}px, ${((Math.cos(settledP * arcAngle) - 1.0) * 550).toFixed(1)}px) rotateY(${(settledP * 40.5).toFixed(2)}deg) rotateZ(${(settledP * -4.5).toFixed(2)}deg)`;
+                    if (transform !== state.transform) { wrapper.style.transform = transform; state.transform = transform; }
+                    const opacity = Math.max(0, 1.0 - Math.abs(settledP) * 0.7).toFixed(3);
+                    if (opacity !== state.opacity) { wrapper.style.opacity = opacity; state.opacity = opacity; }
+                } else if (state.display !== 'none') {
+                    wrapper.style.display = 'none'; state.display = 'none';
+                }
+            });
+
+            const typeStart = 7.6, typeEnd = 8.6;
+            if (scrollP > typeStart && scrollP < typeEnd + 1.0) {
+                let progress = Math.max(0, Math.min(1, (scrollP - typeStart) / (typeEnd - typeStart)));
+                let charCount = Math.floor(progress * this.typeText.length);
+                // P1-7 (Improve #1): only touch innerText/textContent when the visible
+                // character count actually changes, instead of every frame.
+                if (charCount !== this._lastCharCount) {
+                    this.typeEl.textContent = this.typeText.substring(0, charCount);
+                    this._lastCharCount = charCount;
+                }
+                if (this._lastTypeOpacity !== '1') { this.typeWrapper.style.opacity = 1; this._lastTypeOpacity = '1'; }
+            } else if (this._lastTypeOpacity !== '0') {
+                this.typeWrapper.style.opacity = 0; this._lastTypeOpacity = '0';
+            }
+
+            if (this.arrivalStarted && this.arrivalTimer < CONFIG.echo.arrivalDuration) {
+                this.arrivalTimer += dt;
+                this.clusterMaterial.uniforms.uArrivalProgress.value = easeOutExpo(Math.min(this.arrivalTimer / CONFIG.echo.arrivalDuration, 1.0));
+                if (this.arrivalTimer >= CONFIG.echo.arrivalDuration && window.scrollY <= CONFIG.echo.scrollThreshold) this.echoTapIcon.style.opacity = '1';
+            } else if (this.arrivalStarted) {
+                this.clusterMaterial.uniforms.uArrivalProgress.value = 1.0;
+            }
+
+            this.clusterMaterial.uniforms.uTimeline.value = this.elapsed;
+            this.clusterMaterial.uniforms.uMirrorProgress.value = (1.0 - Math.cos((this.elapsed / this.loopDuration) * Math.PI * 2.0)) * 0.5;
+            this.clusterMaterial.uniforms.uBootProgress.value = this.bootProgress * this.bootProgress * (3.0 - 2.0 * this.bootProgress);
+
+            let rotSlowdown = Math.max(0, Math.min(1, burnP / 0.3));
+            let rotationSpeed = 1.0 - (rotSlowdown * rotSlowdown * (3.0 - 2.0 * rotSlowdown));
+            this.currentRotY += dt * 0.025 * rotationSpeed; this.currentRotZ += dt * 0.008 * rotationSpeed;
+            this.organicMesh.rotation.y = this.currentRotY; this.organicMesh.rotation.z = this.currentRotZ;
+
+            AppRenderer.renderer.render(this.scene, this.camera);
+        },
+
+        onVisibilityChange(hidden) {
+            if (hidden) ManagedVideos.pauseAll();
         }
+    });
 
-        animate();
+    function smoothstepJS(min, max, value) {
+        let x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+        return x * x * (3 - 2 * x);
+    }
+    function easeOutExpo(x) { return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); }
 
-        // --- Resize Handler ---
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+    /* ==========================================================================
+       MODULE: PULSE WEBGL & LOGIC
+       ========================================================================== */
+    gsap.registerPlugin(ScrollTrigger);
+
+    function splitTextIntoWords() {
+        document.querySelectorAll('.split-text').forEach((el) => {
+            if (el.classList.contains('is-split')) return;
+            const text = el.innerText;
+            el.innerHTML = '';
+            text.split(' ').forEach((word) => {
+                if (word === '') return;
+                const wrapper = document.createElement('span');
+                wrapper.className = 'word-wrap';
+                const inner = document.createElement('span');
+                inner.className = 'word';
+                inner.innerHTML = word;
+                inner.setAttribute('data-word', word);
+                wrapper.appendChild(inner);
+                el.appendChild(wrapper);
+                el.appendChild(document.createTextNode(' '));
+            });
+            el.classList.add('is-split');
         });
-    </script>
+    }
+
+    function splitTextIntoChars() {
+        document.querySelectorAll('.type-text').forEach((el) => {
+            if (el.classList.contains('is-split')) return;
+            const html = el.innerHTML;
+            const splitHtml = html.split(/(<br\s*\/?>)/i).map((part) => {
+                if (part.toLowerCase().startsWith('<br')) return part;
+                return part.split('').map((char) => (char === ' ' ? '&nbsp;' : `<span class="char">${char}</span>`)).join('');
+            }).join('');
+            el.innerHTML = splitHtml;
+            el.classList.add('is-split');
+        });
+    }
+
+    AppModules.register('pulse', {
+        zIndex: 50,
+
+        init() {
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 3000);
+            this.camera.position.z = (window.innerHeight / 2) / Math.tan((this.camera.fov * Math.PI / 180) / 2);
+            this.elapsed = 0;
+
+            this.pulseHeroVid = ManagedVideos.track(document.getElementById('hero-vid'));
+            this.pulseHeroPlayBtn = document.getElementById('hero-play-btn');
+            this.isPulseHeroInView = false;
+            this.isWaitingToLoop = false;
+            this.particleTriggerCount = 0;
+            this.isParticleAnimating = false;
+            this.particlesTriggered = false;
+            this.heroHasPlayed = false;
+
+            this.pulseHeroVid.pause();
+            this.pulseHeroVid.currentTime = 0;
+
+            this.powerTextTl = gsap.timeline({ paused: true });
+            this.pulseMasterTl = gsap.timeline({ paused: true });
+
+            splitTextIntoWords();
+            splitTextIntoChars();
+
+            this.powerTextTl.fromTo(".power-text .char", { opacity: 0 }, { opacity: 1, duration: 0.01, stagger: 0.04, ease: "none" });
+
+            this.pulseMasterTl.to(".hero-intro", { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" })
+                .call(() => { document.querySelector('.hero-title').classList.add('animate-gradient'); }, null, "-=0.2")
+                .to(".hero-title .word", { y: "0%", opacity: 1, duration: 0.5, ease: "power3.out" }, "<")
+                .to("#hero-video-module", {
+                    opacity: 1, scale: 1, duration: 0.8, ease: "power3.out",
+                    onComplete: () => {
+                        if (this.isPulseHeroInView && window.currentView === 'pulse') {
+                            if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                            this.pulseHeroVid.play().catch((e) => console.warn("Autoplay prevented:", e));
+                        }
+                    }
+                }, "-=0.4");
+
+            this.powerInView = false;
+            ScrollTrigger.create({
+                trigger: "#power",
+                start: "top 75%",
+                onEnter: () => { this.powerInView = true; if (this.heroHasPlayed) this.powerTextTl.play(); },
+                onLeaveBack: () => { this.powerInView = false; this.powerTextTl.reverse(); }
+            });
+
+            this.pulseHeroVid.addEventListener('playing', () => {
+                if (!this.heroHasPlayed) {
+                    this.heroHasPlayed = true;
+                    setTimeout(() => { if (this.powerInView) this.powerTextTl.play(); }, 800);
+                }
+            });
+
+            this.pulseHeroVid.addEventListener('ended', () => {
+                if (this.particleTriggerCount < 3) {
+                    this.isWaitingToLoop = true;
+                    setTimeout(() => {
+                        this.isWaitingToLoop = false;
+                        if (this.isPulseHeroInView && window.currentView === 'pulse') this.pulseHeroVid.play().catch(() => {});
+                    }, 3000);
+                } else {
+                    this.pulseHeroPlayBtn.classList.add('visible');
+                }
+            });
+
+            this.pulseHeroPlayBtn.addEventListener('click', () => {
+                this.pulseHeroPlayBtn.classList.remove('visible');
+                this.particlesTriggered = false;
+                if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                this.pulseHeroVid.play();
+            });
+
+            const pulseHeroObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    this.isPulseHeroInView = entry.isIntersecting;
+                    if (this.isPulseHeroInView && window.currentView === 'pulse') {
+                        if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                        if (!this.isWaitingToLoop && this.pulseHeroVid.paused && this.pulseHeroVid.currentTime > 0 && this.particleTriggerCount < 3) {
+                            this.pulseHeroVid.play().catch(() => {});
+                        }
+                    } else {
+                        this.pulseHeroVid.pause();
+                    }
+                });
+            }, { root: null, rootMargin: '0px', threshold: 0.5 });
+            pulseHeroObserver.observe(document.getElementById('hero-video-module'));
+
+            gsap.fromTo("#power-video-module",
+                { opacity: 0, scale: 0.85 },
+                { opacity: 1, scale: 1.15, duration: 1.5, ease: "power3.out", scrollTrigger: { trigger: "#power-video-module", start: "top 85%", toggleActions: "play reset play reset" } }
+            );
+
+            const powerVid = ManagedVideos.track(document.getElementById('power-vid'));
+            const powerObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && window.currentView === 'pulse') {
+                        if (powerVid.preload === 'none') powerVid.preload = 'auto';
+                        powerVid.play().catch(() => {});
+                    } else powerVid.pause();
+                });
+            }, { threshold: 0.1 });
+            powerObserver.observe(document.getElementById('power-video-module'));
+
+            const uiTl = gsap.timeline({ scrollTrigger: { trigger: "#ui-info", start: "top 80%", toggleActions: "play reset play reset" } });
+            uiTl.fromTo("#ui-text", { opacity: 0, x: -100 }, { opacity: 1, x: 0, duration: 1.2, ease: "power3.out" })
+                .fromTo("#ui-img", { opacity: 0, x: 100 }, { opacity: 1, x: 0, duration: 1.2, ease: "power3.out" }, "-=0.9");
+
+            this.initPhysicsCards();
+            this.initParticles();
+        },
+
+        initPhysicsCards() {
+            const physicsCards = document.querySelectorAll('.physics-card');
+            const physicsContainer = document.getElementById('physics-carousel-container');
+            const onboardingPrompt = document.querySelector('.onboarding-prompt');
+
+            let selectedCard = null, isDraggingCard = false, draggedCardIndex = -1;
+            let startPointerX = 0, startPointerY = 0, hasInteracted = false;
+
+            const cardData = Array.from(physicsCards).map(() => ({
+                x: 0, y: 0, z: -1000, rotX: 0, rotY: 0, rotZ: 0,
+                vx: 0, vy: 0, vz: 0, vRotX: 0, vRotY: 0, vRotZ: 0,
+                baseTx: 0, baseTy: 0, baseTz: 0, baseTRotY: 0, baseTRotZ: 0,
+                dragOffsetX: 0, dragOffsetY: 0, isHovered: false, isOut: true
+            }));
+
+            function updateBaseTargets() {
+                const width = window.innerWidth; const isMobile = isNarrowViewport();
+                const yOffset = isMobile ? -120 : 0;
+                let maxBottom = 0;
+
+                cardData.forEach((data, i) => {
+                    const rect = physicsCards[i].getBoundingClientRect();
+                    const cardW = rect.width || (isMobile ? width * 0.42 : width * 0.28);
+                    const cardH = cardW * (9 / 16);
+                    if (i === 0) { data.baseTx = 0; data.baseTy = -cardH * 0.65 + yOffset; data.baseTz = 0; data.baseTRotY = 0; data.baseTRotZ = 0; }
+                    else if (i === 1) { data.baseTx = -cardW * 0.55; data.baseTy = cardH * 0.4 + yOffset; data.baseTz = 0; data.baseTRotY = 0; data.baseTRotZ = -4; }
+                    else if (i === 2) { data.baseTx = cardW * 0.55; data.baseTy = cardH * 0.4 + yOffset; data.baseTz = 0; data.baseTRotY = 0; data.baseTRotZ = 4; }
+
+                    const cardBottom = data.baseTy + (cardH / 2);
+                    if (cardBottom > maxBottom) maxBottom = cardBottom;
+                });
+
+                if (onboardingPrompt) onboardingPrompt.style.top = `calc(50% + ${maxBottom + 60}px)`;
+            }
+            Viewport.onChange(updateBaseTargets);
+            updateBaseTargets();
+
+            physicsCards.forEach((card, i) => {
+                const video = ManagedVideos.track(card.querySelector('video'));
+                card.addEventListener('pointerenter', (e) => {
+                    if (e.pointerType === 'mouse' && selectedCard === null && !isDraggingCard) {
+                        cardData[i].isHovered = true; card.classList.add('is-hovered');
+                        if (video.preload === 'none') video.preload = 'auto';
+                        video.play().catch(() => {});
+                    }
+                });
+                card.addEventListener('pointerleave', (e) => {
+                    if (e.pointerType === 'mouse') {
+                        cardData[i].isHovered = false; card.classList.remove('is-hovered');
+                        if (selectedCard !== i) { video.pause(); video.currentTime = 0; }
+                    }
+                });
+                card.addEventListener('pointerdown', (e) => {
+                    isDraggingCard = true; draggedCardIndex = i; startPointerX = e.clientX; startPointerY = e.clientY;
+                    card.classList.add('is-dragging'); // P0-2: only suppress scroll on the card actively being dragged
+                    card.setPointerCapture(e.pointerId); video.pause();
+                    if (!hasInteracted) { hasInteracted = true; onboardingPrompt.style.opacity = 0; }
+                });
+                card.addEventListener('pointermove', (e) => {
+                    if (!isDraggingCard || draggedCardIndex !== i) return;
+                    cardData[i].dragOffsetX = e.clientX - startPointerX; cardData[i].dragOffsetY = e.clientY - startPointerY;
+                });
+
+                const handleCardRelease = (e) => {
+                    if (!isDraggingCard || draggedCardIndex !== i) return;
+                    isDraggingCard = false; draggedCardIndex = -1;
+                    card.classList.remove('is-dragging');
+
+                    const dragDist = Math.hypot(cardData[i].dragOffsetX, cardData[i].dragOffsetY);
+                    cardData[i].dragOffsetX = 0; cardData[i].dragOffsetY = 0;
+                    try { card.releasePointerCapture(e.pointerId); } catch (err) {}
+
+                    if (dragDist < CONFIG.physics.dragThreshold) {
+                        if (selectedCard === i) {
+                            if (video.preload === 'none') video.preload = 'auto';
+                            video.play().catch(() => {});
+                        } else {
+                            if (selectedCard !== null) {
+                                const oldVideo = physicsCards[selectedCard].querySelector('video');
+                                oldVideo.pause(); oldVideo.currentTime = 0;
+                            }
+                            selectedCard = i;
+                            cardData[i].isHovered = false;
+                            card.classList.remove('is-hovered');
+                            video.currentTime = 0;
+                            if (video.preload === 'none') video.preload = 'auto';
+                            video.play().catch(() => {});
+                        }
+                    } else {
+                        if (selectedCard === i) {
+                            if (video.preload === 'none') video.preload = 'auto';
+                            video.play().catch(() => {});
+                        } else {
+                            video.pause(); video.currentTime = 0;
+                        }
+                    }
+                };
+                card.addEventListener('pointerup', handleCardRelease);
+                card.addEventListener('pointercancel', handleCardRelease);
+                card._handleCardRelease = handleCardRelease;
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                if (isDraggingCard && draggedCardIndex !== -1) {
+                    physicsCards[draggedCardIndex]._handleCardRelease(e);
+                }
+            });
+
+            physicsContainer.addEventListener('click', (e) => {
+                if (selectedCard !== null && !e.target.closest('.physics-card')) {
+                    const card = physicsCards[selectedCard]; const video = card.querySelector('video');
+                    video.pause(); video.currentTime = 0; selectedCard = null;
+                }
+            });
+
+            // P2-4: pause the whole spring simulation (and its per-frame transform
+            // writes) when the Features section isn't visible, instead of only pausing
+            // individual card videos and letting the physics keep integrating off-screen.
+            let sectionVisible = false;
+            const featuresObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && window.currentView === 'pulse') {
+                        sectionVisible = true;
+                        hasInteracted = false;
+                        onboardingPrompt.style.opacity = 1;
+                        cardData.forEach((data) => {
+                            if (data.isOut) {
+                                data.x = data.baseTx * 2 + (Math.random() - 0.5) * 300;
+                                data.y = data.baseTy * 2 + 600;
+                                data.z = -800;
+                                data.isOut = false;
+                            }
+                        });
+                    } else {
+                        sectionVisible = false;
+                        onboardingPrompt.style.opacity = 0;
+                        selectedCard = null; isDraggingCard = false; draggedCardIndex = -1;
+
+                        physicsCards.forEach((card) => {
+                            card.classList.remove('is-hovered', 'is-dragging');
+                            const video = card.querySelector('video');
+                            if (video) { video.pause(); video.currentTime = 0; }
+                        });
+
+                        cardData.forEach((data) => {
+                            data.isOut = true; data.isHovered = false;
+                            data.x = data.baseTx * 2 + (Math.random() - 0.5) * 300;
+                            data.y = data.baseTy * 2 + 600;
+                            data.z = -800;
+                            data.vx = 0; data.vy = 0; data.vz = 0;
+                            data.rotX = 0; data.rotY = 0; data.rotZ = 0;
+                            data.vRotX = 0; data.vRotY = 0; data.vRotZ = 0;
+                        });
+                    }
+                });
+            }, { threshold: 0.1 });
+            featuresObserver.observe(document.getElementById('features-section'));
+
+            this._physics = {
+                cardData, physicsCards, selectedCardRef: () => selectedCard, isDraggingRef: () => isDraggingCard,
+                draggedIndexRef: () => draggedCardIndex, isSectionVisible: () => sectionVisible
+            };
+        },
+
+        updatePhysics(dt) {
+            const p = this._physics;
+            if (!p || !p.isSectionVisible()) return;
+            const time = this.elapsed;
+
+            p.cardData.forEach((data, i) => {
+                const el = p.physicsCards[i];
+                let isSelected = (p.selectedCardRef() === i);
+                let isDraggingThis = (p.isDraggingRef() && p.draggedIndexRef() === i);
+                let currentTension = isSelected ? CONFIG.physics.tension.hover : (isDraggingThis ? CONFIG.physics.tension.drag : CONFIG.physics.tension.default);
+                let currentFriction = isSelected ? CONFIG.physics.friction.hover : (isDraggingThis ? CONFIG.physics.friction.drag : CONFIG.physics.friction.default);
+
+                let tx = data.baseTx; let ty = data.baseTy + Math.sin(time * 1.2 + i * 2) * 15; let tz = data.baseTz;
+                let tRotX = Math.sin(time * 0.8 + i) * 2; let tRotY = data.baseTRotY + Math.cos(time * 1.1 + i) * 2; let tRotZ = data.baseTRotZ + Math.sin(time * 1.3 + i) * 2;
+                let targetTextOpacity = 1;
+
+                if (isSelected) {
+                    tx = 0; ty = 0; tz = 450; tRotX = 0; tRotY = 0; tRotZ = 0; targetTextOpacity = 0; el.style.zIndex = 100;
+                } else if (p.selectedCardRef() !== null) {
+                    tx = data.baseTx * 2.2; ty = data.baseTy * 2.2; tz = -150; tRotY = data.baseTx * 0.05; tRotX = -data.baseTy * 0.05; el.style.zIndex = 10;
+                } else {
+                    if (isDraggingThis) {
+                        tx += data.dragOffsetX; ty += data.dragOffsetY; tz += 50; tRotX = 0; tRotY = 0; tRotZ = 0; el.style.zIndex = 50;
+                    } else {
+                        if (data.isHovered) { tz += 40; targetTextOpacity = 0; }
+                        el.style.zIndex = 10;
+                    }
+                }
+
+                // P1-2/F13: tension/friction were tuned per-frame at an assumed 60Hz;
+                // scale both by dt so spring stiffness is identical at 30Hz, 60Hz, 120Hz.
+                const effTension = 1 - Math.pow(1 - currentTension, dt * 60);
+                const effFriction = Math.pow(currentFriction, dt * 60);
+                const ticks = dt * 60;
+
+                data.vx += (tx - data.x) * effTension; data.vy += (ty - data.y) * effTension; data.vz += (tz - data.z) * effTension;
+                data.vRotX += (tRotX - data.rotX) * effTension; data.vRotY += (tRotY - data.rotY) * effTension; data.vRotZ += (tRotZ - data.rotZ) * effTension;
+
+                data.vx = Math.max(-CONFIG.physics.maxVelocity, Math.min(CONFIG.physics.maxVelocity, data.vx));
+                data.vy = Math.max(-CONFIG.physics.maxVelocity, Math.min(CONFIG.physics.maxVelocity, data.vy));
+                data.vz = Math.max(-CONFIG.physics.maxVelocity, Math.min(CONFIG.physics.maxVelocity, data.vz));
+
+                data.vx *= effFriction; data.vy *= effFriction; data.vz *= effFriction;
+                data.vRotX *= effFriction; data.vRotY *= effFriction; data.vRotZ *= effFriction;
+
+                data.x += data.vx * ticks; data.y += data.vy * ticks; data.z += data.vz * ticks;
+                data.rotX += data.vRotX * ticks; data.rotY += data.vRotY * ticks; data.rotZ += data.vRotZ * ticks;
+
+                if (isNaN(data.x) || isNaN(data.y) || isNaN(data.z)) {
+                    data.x = data.baseTx; data.y = data.baseTy; data.z = data.baseTz;
+                    data.vx = 0; data.vy = 0; data.vz = 0;
+                }
+
+                el.style.transform = `translate3d(${data.x}px, ${data.y}px, ${data.z}px) rotateX(${data.rotX}deg) rotateY(${data.rotY}deg) rotateZ(${data.rotZ}deg)`;
+
+                const textOverlay = el.querySelector('.card-text-overlay');
+                if (textOverlay) {
+                    let currentOpacity = parseFloat(textOverlay.style.opacity || 1);
+                    textOverlay.style.opacity = currentOpacity + (targetTextOpacity - currentOpacity) * Math.min(1, 0.1 * ticks);
+                }
+            });
+        },
+
+        initParticles() {
+            const particleCount = Math.max(80, Math.round((isNarrowViewport() ? CONFIG.pulse.particleCountMobile : CONFIG.pulse.particleCountDesktop) * Quality.current.particleScale));
+            this.pParticleCount = particleCount;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const explodes = new Float32Array(particleCount * 3);
+            const targets = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+
+            const colorOrangeRed = new THREE.Color('#FF3B30');
+            const colorMagenta = new THREE.Color('#FF007F');
+            const colorDeepPurple = new THREE.Color('#7A00FF');
+            const colorLightPurple = new THREE.Color('#B066FF');
+            const colorBlue = new THREE.Color('#00C7FF');
+
+            for (let i = 0; i < particleCount; i++) {
+                const u = Math.random() + Math.random() + Math.random() - 1.5;
+                const v = Math.random() + Math.random() + Math.random() - 1.5;
+                positions[i * 3] = u * 28.75; positions[i * 3 + 1] = v * 28.75; positions[i * 3 + 2] = 20;
+
+                const randType = Math.random();
+                let radiusXY, radiusZ;
+                if (randType < 0.40) { radiusXY = Math.random() * (window.innerWidth * 0.12); radiusZ = (0.7 + Math.random() * 0.28) * this.camera.position.z; }
+                else if (randType < 0.70) { radiusXY = 60 + Math.random() * (window.innerWidth * 0.30); radiusZ = (0.1 + Math.random() * 0.4) * this.camera.position.z; }
+                else { radiusXY = 30 + Math.random() * (window.innerWidth * 0.18); radiusZ = (0.4 + Math.random() * 0.4) * this.camera.position.z; }
+
+                const theta = Math.random() * Math.PI * 2;
+                explodes[i * 3] = Math.cos(theta) * radiusXY;
+                explodes[i * 3 + 1] = Math.sin(theta) * radiusXY + (radiusXY * 0.35);
+                explodes[i * 3 + 2] = radiusZ;
+
+                const spread = window.innerWidth * 0.25;
+                let t = (explodes[i * 3] + spread) / (spread * 2);
+                t = Math.max(0, Math.min(1, t));
+
+                let color = new THREE.Color();
+                if (t < 0.33) color.lerpColors(colorOrangeRed, colorMagenta, t / 0.33);
+                else if (t < 0.60) {
+                    let localT = (t - 0.33) / 0.27;
+                    let midPurple = Math.random() > 0.5 ? colorDeepPurple : colorLightPurple;
+                    if (localT < 0.5) color.lerpColors(colorMagenta, midPurple, localT * 2);
+                    else color.lerpColors(midPurple, colorOrangeRed, (localT - 0.5) * 2);
+                } else color.lerpColors(colorOrangeRed, colorBlue, (t - 0.60) / 0.40);
+
+                colors[i * 3] = color.r; colors[i * 3 + 1] = color.g; colors[i * 3 + 2] = color.b;
+                sizes[i] = (Math.random() * 4.0 + 2.0) * 1.625;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('aExplode', new THREE.BufferAttribute(explodes, 3));
+            geometry.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
+            geometry.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+
+            this.particleMaterial = new THREE.ShaderMaterial({
+                uniforms: { uTime: { value: 0 }, uExplodeProgress: { value: 0 }, uConvergeProgress: { value: 0 }, uOpacity: { value: 0 }, uOrigin: { value: new THREE.Vector3(0, 0, 0) }, uMaxPointSize: { value: Quality.current.maxPointSize } },
+                vertexShader: `
+                    uniform float uTime; uniform float uExplodeProgress; uniform float uConvergeProgress; uniform vec3 uOrigin; uniform float uMaxPointSize;
+                    attribute vec3 aExplode; attribute vec3 aTarget; attribute vec3 aColor; attribute float aSize;
+                    varying vec3 vColor;
+                    void main() {
+                        vColor = aColor;
+                        vec3 floatOffset = vec3(sin(uTime * 0.5 + aExplode.x) * 20.0, cos(uTime * 0.5 + aExplode.y) * 20.0, sin(uTime * 0.5 + aExplode.z) * 20.0);
+                        vec3 pos = position + uOrigin; vec3 explodedPos = uOrigin + aExplode + floatOffset;
+                        pos = mix(pos, explodedPos, uExplodeProgress); pos = mix(pos, aTarget, uConvergeProgress);
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_PointSize = min(aSize * (1000.0 / max(-mvPosition.z, 1.0)), uMaxPointSize);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    uniform float uOpacity; varying vec3 vColor;
+                    void main() {
+                        vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                        if (length(xy) > 0.5) discard;
+                        float alpha = smoothstep(0.5, 0.0, length(xy)) * uOpacity;
+                        gl_FragColor = vec4(vColor, alpha);
+                    }
+                `,
+                transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            });
+
+            this.particles = new THREE.Points(geometry, this.particleMaterial);
+            this.scene.add(this.particles);
+
+            this.updateParticleTargets = () => {
+                const textEl = document.getElementById('target-text');
+                const rect = textEl.getBoundingClientRect();
+                const targetAttr = geometry.attributes.aTarget;
+                for (let i = 0; i < particleCount; i++) {
+                    const px = rect.left + rect.width * 0.05 + Math.random() * (rect.width * 0.9);
+                    const py = rect.top + rect.height * 0.2 + Math.random() * (rect.height * 0.6);
+                    targetAttr.setXYZ(i, px - window.innerWidth / 2, -(py - window.innerHeight / 2), 0);
+                }
+                targetAttr.needsUpdate = true;
+            };
+
+            this.particleTl = null;
+        },
+
+        syncParticlesWithVideo() {
+            if (!this.pulseHeroVid) return;
+            const time = this.pulseHeroVid.currentTime;
+            if (time < 1.0) this.particlesTriggered = false;
+            if (time >= 6.0 && !this.particlesTriggered && this.isPulseHeroInView) {
+                this.particlesTriggered = true; this.isParticleAnimating = true; this.particleTriggerCount++;
+                const rect = this.pulseHeroVid.getBoundingClientRect();
+                this.particleMaterial.uniforms.uOrigin.value.set((rect.left + rect.width / 2) - window.innerWidth / 2, -((rect.top + rect.height / 2) - window.innerHeight / 2), 0);
+                if (this.particleTl) this.particleTl.kill();
+                this.particleMaterial.uniforms.uExplodeProgress.value = 0; this.particleMaterial.uniforms.uConvergeProgress.value = 0; this.particleMaterial.uniforms.uOpacity.value = 0;
+                this.particleTl = gsap.timeline({ onComplete: () => { this.isParticleAnimating = false; } });
+                this.particleTl.to(this.particleMaterial.uniforms.uOpacity, { value: 1, duration: 0.2 })
+                    .to(this.particleMaterial.uniforms.uExplodeProgress, { value: 1, duration: 2.5, ease: "power3.out" }, "<")
+                    .to({}, { duration: 2.0, onComplete: this.updateParticleTargets })
+                    .to(this.particleMaterial.uniforms.uConvergeProgress, { value: 1, duration: 1.5, ease: "power3.in" })
+                    .to(this.particleMaterial.uniforms.uOpacity, { value: 0, duration: 0.4, ease: "power2.in" }, "-=0.4");
+            }
+        },
+
+        resetEntrance() {
+            const hasInteractedReset = this._physics;
+            document.querySelector('.onboarding-prompt').style.opacity = 0;
+            if (this._physics) this._physics.cardData.forEach((d) => d.isOut = true);
+
+            if (this.pulseHeroVid) { this.pulseHeroVid.pause(); this.pulseHeroVid.currentTime = 0; }
+            this.particleTriggerCount = 0;
+            this.particlesTriggered = false;
+            this.isParticleAnimating = false;
+            this.heroHasPlayed = false;
+            this.pulseHeroPlayBtn.classList.remove('visible');
+
+            document.querySelector('.hero-title').classList.remove('animate-gradient');
+            gsap.set(".hero-title .word", { y: "100%", opacity: 0 });
+            gsap.set(".hero-intro", { opacity: 0, scale: 0.9 });
+            gsap.set("#hero-video-module", { opacity: 0, scale: 0.93 });
+
+            this.powerTextTl.pause(0);
+
+            if (this.pulseMasterTl) this.pulseMasterTl.restart();
+            setTimeout(() => ScrollTrigger.refresh(), 100);
+        },
+
+        enter() {
+            this.resetEntrance();
+            AppRenderer.show();
+        },
+
+        update(dt) {
+            this.elapsed += dt;
+            this.updatePhysics(dt);
+
+            if (this.isPulseHeroInView || this.isParticleAnimating) {
+                this.particleMaterial.uniforms.uTime.value = this.elapsed;
+                if (this.isPulseHeroInView) this.syncParticlesWithVideo();
+            }
+            AppRenderer.renderer.render(this.scene, this.camera);
+        },
+
+        resize(w, h) {
+            this.camera.aspect = w / h;
+            this.camera.position.z = (h / 2) / Math.tan((this.camera.fov * Math.PI / 180) / 2);
+            this.camera.updateProjectionMatrix();
+        },
+
+        onVisibilityChange(hidden) {
+            if (hidden) ManagedVideos.pauseAll();
+        }
+    });
+
+    /* ==========================================================================
+       INITIALIZATION
+       ========================================================================== */
+    switchView('home');
+</script>
 </body>
 </html>
