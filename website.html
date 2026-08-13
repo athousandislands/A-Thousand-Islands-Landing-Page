@@ -160,20 +160,6 @@
         }
         @media (hover: hover) and (pointer: fine) { .glass-btn:hover .btn-tooltip { opacity: 1; transform: translateY(0); } }
 
-        /* P2-8: visible "enable motion" prompt for Echo gyro parallax, shown on Echo entry
-           instead of hijacking the very first tap anywhere on the site. */
-        .motion-prompt-btn {
-            position: fixed; left: 50%; bottom: calc(6% + env(safe-area-inset-bottom, 0px));
-            transform: translateX(-50%);
-            z-index: 40; display: none;
-            padding: 0.7rem 1.4rem; border-radius: 999px;
-            background: rgba(255,255,255,0.08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.15); color: var(--text-main);
-            font-family: var(--font-family); font-size: 0.95rem; letter-spacing: 0.01em;
-            cursor: pointer;
-        }
-        .motion-prompt-btn.is-visible { display: block; }
-
         /* ==========================================================================
            4. NAVIGATION (SMART GLASS HEADER)
            ========================================================================== */
@@ -257,7 +243,7 @@
         .home-scroll-indicator-inner {
             display: inline-block;
             font-family: var(--font-family); font-weight: 400;
-            font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+            font-size: 0.98rem; letter-spacing: 0.04em;
             color: var(--text-main);
             animation: homeScrollPulse 3.6s infinite ease-in-out;
         }
@@ -334,8 +320,11 @@
         }
 
         .echo-hero-controls { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
-        #echo-hero-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; }
+        #echo-hero-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; opacity: 1; transition: opacity 0.35s ease, transform 0.3s ease; }
         #echo-hero-play-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
+        /* Controls hidden during playback so they don't sit over the video — visible
+           again on pause/ended, matching normal video-player conventions. */
+        #echo-hero-play-btn.is-playing { opacity: 0; pointer-events: none; }
 
         #echo-mid-text-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 4; opacity: 0; pointer-events: none; will-change: opacity, transform; }
         #echo-mid-text { color: var(--text-main); font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 500; letter-spacing: -0.02em; margin: 0; line-height: 1.15; }
@@ -459,10 +448,14 @@
         @media (min-width: 1000px) { .ui-info-container { flex-direction: row; justify-content: space-between; align-items: center; } }
         .ui-text-col { flex: 1; width: 100%; max-width: 500px; padding-right: 2rem; }
         .ui-desc { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 2rem; }
-        .ui-img-col { flex: 1.2; width: 100%; display: flex; justify-content: flex-end; }
-        /* P2-6 kept as-is (webp already in place); aspect-ratio reserved to avoid layout
-           shift since real intrinsic pixel dimensions weren't supplied for width/height attrs */
-        .ui-laptop-img { width: 100%; max-width: 800px; height: auto; aspect-ratio: 8 / 5; display: block; object-fit: cover; object-position: right center; }
+        .ui-img-col { flex: 1.2; width: 100%; display: flex; justify-content: flex-end; align-items: center; }
+        /* Fix: this image was being cut off top/bottom because .ui-img-col is a flex
+           container and the default align-items:stretch was forcing the image's cross-axis
+           (height, in the row layout used at >=1000px) to match the row's height rather
+           than its own intrinsic aspect ratio. align-items:center above stops that stretch;
+           object-fit:contain is a safety net so any future container/image mismatch
+           letterboxes instead of cropping. */
+        .ui-laptop-img { width: 100%; max-width: 800px; height: auto; display: block; align-self: center; object-fit: contain; }
 
         #features-section { width: 100%; background: transparent; padding-bottom: 8rem; z-index: 100; position: relative; }
         .features-header { padding: 8rem 2rem 4rem; text-align: center; }
@@ -636,6 +629,10 @@
             .features-header { padding: 40px 1.5rem 2rem; }
             .physics-card { width: clamp(160px, 42vw, 280px); padding: 6px; border-radius: 18px; }
             .video-wrapper { border-radius: 12px; }
+            /* Cards keep floating/select/play on mobile — only dragging (and the prompt
+               that advertised it) is removed, since drag was competing with page scroll
+               and causing the title overlay to flicker in and out. Desktop is untouched. */
+            .onboarding-prompt { display: none; }
 
             .modal-container { width: 95%; padding: 2rem 1.5rem; border-radius: 24px; }
             .modal-close { top: 1rem; right: 1rem; }
@@ -782,7 +779,6 @@
     </div>
 
     <!-- P2-8: visible, explicit control instead of hijacking the first tap anywhere on the site -->
-    <button type="button" id="echo-motion-btn" class="motion-prompt-btn">Enable motion parallax</button>
 
     <div id="echo-hero-video-wrapper">
         <video id="echo-hero-video" src="./echo/videos/echo-hero-visual.mp4" playsinline preload="none"></video>
@@ -1062,9 +1058,9 @@
        ========================================================================== */
     const Quality = (() => {
         const profiles = {
-            low:  { dprCap: 1.25, particleScale: 0.45, maxPointSize: 120, backdropBlur: false, gyro: false },
-            mid:  { dprCap: 1.5,  particleScale: 0.7,  maxPointSize: 180, backdropBlur: true,  gyro: true  },
-            high: { dprCap: 2.0,  particleScale: 1.0,  maxPointSize: 250, backdropBlur: true,  gyro: true  }
+            low:  { dprCap: 1.25, particleScale: 0.45, maxPointSize: 120, backdropBlur: false },
+            mid:  { dprCap: 1.5,  particleScale: 0.7,  maxPointSize: 180, backdropBlur: true  },
+            high: { dprCap: 2.0,  particleScale: 1.0,  maxPointSize: 250, backdropBlur: true  }
         };
 
         function computeTier() {
@@ -1479,6 +1475,42 @@
         function pauseAll() { set.forEach((v) => { if (!v.paused) v.pause(); }); }
         return { track, pauseAll };
     })();
+
+    /* ==========================================================================
+       MODULE: VIDEO LOADING HELPERS (Pulse loading fix)
+       Root cause of hero.mp4 / hand-gesture-video.mp4 occasionally never starting
+       to buffer in time: the previous pattern was `if (video.preload === 'none')
+       video.preload = 'auto';` immediately before calling .play(). Mutating the
+       .preload IDL attribute does NOT restart an already-completed resource
+       selection algorithm in most engines — the browser only consults .preload at
+       the point it first selects a resource for that media element (effectively
+       once, at parse time, when a src/source is already present). Flipping the
+       attribute afterward is a no-op in Chrome/Safari/Firefox unless .load() is
+       also called to explicitly re-invoke resource selection with the new hint.
+       So the old code's "upgrade to auto" call sometimes did nothing at all, and
+       playback was requested against a video that had never started downloading —
+       hence "occasionally failed to load or loaded too late," worse on the video
+       requested with the least lead time (power-vid, previously only upgraded and
+       played in the same IntersectionObserver callback with zero buffer window).
+       ========================================================================== */
+    function eagerLoadVideo(videoEl) {
+        if (!videoEl || videoEl.preload === 'auto') return; // already upgraded — don't reload and lose buffered data/position
+        videoEl.preload = 'auto';
+        try { videoEl.load(); } catch (e) {}
+    }
+
+    // Basic resilience: if a video errors out mid-load (the "failed to load once"
+    // case), retry the load a single time rather than leaving it permanently broken.
+    function attachLoadResilience(videoEl) {
+        if (!videoEl) return;
+        let retried = false;
+        videoEl.addEventListener('error', () => {
+            if (retried) return;
+            retried = true;
+            console.warn('[ATI] video failed to load, retrying once:', videoEl.currentSrc || videoEl.src);
+            setTimeout(() => { try { videoEl.load(); } catch (e) {} }, 600);
+        });
+    }
 
     /* ==========================================================================
        MODULE: HOME WEBGL SYSTEM
@@ -1898,11 +1930,7 @@
             this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             this.camera.position.set(0, 0, 3.8);
 
-            this.targetCamX = 0; this.targetCamY = 0;
-            this.currentCamX = 0; this.currentCamY = 0;
-            this.currentFov = 45;
             this.baseCamY = 0;
-            this.gyroEnabled = false;
             this.elapsed = 0;
 
             const dynamicVertexStage = `
@@ -2101,7 +2129,6 @@
             this.echoHeroVideo = ManagedVideos.track(document.getElementById('echo-hero-video'));
             this.echoTapIcon = document.getElementById('echo-scroll-indicator');
             this.echoHeroPlayBtn = document.getElementById('echo-hero-play-btn');
-            this.motionBtn = document.getElementById('echo-motion-btn');
             this.typeWrapper = document.getElementById('echo-outro-text-wrapper');
             this.typeEl = document.getElementById('echo-outro-text');
             this.typeText = "It listens, It feels, It moves.";
@@ -2117,13 +2144,6 @@
             this._lastTypeOpacity = null;
             this._lastCharCount = -1;
             this._cardState = Array.from(this.videoWrappers).map(() => ({ display: null, transform: null, opacity: null }));
-
-            // P2-8: gyro permission is requested from an explicit, visible control shown
-            // on Echo entry, not from the very first tap anywhere on the site.
-            this.motionBtn.addEventListener('click', () => this.requestGyro());
-
-            const handleGyro = (e) => this.handleGyro(e);
-            this._handleGyro = handleGyro;
 
             document.addEventListener('mousemove', (e) => {
                 if (window.currentView !== 'echo') return;
@@ -2158,7 +2178,7 @@
 
             window.addEventListener('click', (e) => {
                 if (window.currentView !== 'echo' || !this.canInteract) return;
-                if (e.target.closest('.echo-video-card-wrapper') || e.target.closest('#echo-hero-video-wrapper') || e.target.closest('#echo-motion-btn')) return;
+                if (e.target.closest('.echo-video-card-wrapper') || e.target.closest('#echo-hero-video-wrapper')) return;
                 if (window.scrollY < window.innerHeight * 1.5) window.scrollBy({ top: window.innerHeight * 0.5, behavior: 'smooth' });
             });
 
@@ -2205,43 +2225,19 @@
             this.updateLayout();
         },
 
-        requestGyro() {
-            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduced || !Quality.current.gyro) { this.motionBtn.classList.remove('is-visible'); return; }
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then((permissionState) => {
-                    if (permissionState === 'granted') { window.addEventListener('deviceorientation', this._handleGyro); this.gyroEnabled = true; }
-                    this.motionBtn.classList.remove('is-visible');
-                }).catch(() => { this.motionBtn.classList.remove('is-visible'); });
-            } else {
-                window.addEventListener('deviceorientation', this._handleGyro); this.gyroEnabled = true;
-                this.motionBtn.classList.remove('is-visible');
-            }
-        },
-
-        // P2-8: axis mapping now accounts for screen orientation. In landscape, beta/gamma
-        // swap physical meaning relative to the page's X/Y — previously ignored, so
-        // parallax responded to the wrong tilt direction once rotated.
-        handleGyro(e) {
-            let pitch = Math.max(-45, Math.min(45, e.beta || 0));
-            let roll = Math.max(-45, Math.min(45, e.gamma || 0));
-            const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-            if (Math.abs(angle) === 90) {
-                const swapped = pitch; pitch = angle === 90 ? -roll : roll; roll = angle === 90 ? swapped : -swapped;
-            }
-            this.targetCamX = roll / 45;
-            this.targetCamY = pitch / 45;
-        },
-
         updateEchoPlayBtnUI() {
             const playIcon = document.querySelector('#echo-hero-play-btn .echo-icon-play');
             const pauseIcon = document.querySelector('#echo-hero-play-btn .echo-icon-pause');
             if (this.echoHeroVideo.paused) {
                 playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
                 this.echoHeroPlayBtn.classList.remove('is-pause'); this.echoHeroPlayBtn.classList.add('is-play');
+                this.echoHeroPlayBtn.classList.remove('is-playing');
             } else {
                 playIcon.style.display = 'none'; pauseIcon.style.display = 'block';
                 this.echoHeroPlayBtn.classList.remove('is-play'); this.echoHeroPlayBtn.classList.add('is-pause');
+                // Hide the control once playback is actually underway — it was sitting
+                // over the video and blocking the visual.
+                this.echoHeroPlayBtn.classList.add('is-playing');
             }
         },
 
@@ -2256,6 +2252,11 @@
             else { orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; }
 
             this.baseCamY = camLookY;
+            // Camera parallax/gyro removed — camera now sits at a fixed point looking
+            // straight at the cluster, only baseCamY (mobile vs desktop framing) changes.
+            this.camera.position.x = 0;
+            this.camera.position.y = this.baseCamY;
+            this.camera.lookAt(0, this.baseCamY, 0);
             this.organicMesh.position.x = 0; this.organicMesh.position.y = orbY;
             this.clusterMaterial.uniforms.uShellRadius.value = w < CONFIG.breakpoints.desktopMin ? 0.3915 : 0.52;
         },
@@ -2271,21 +2272,12 @@
             this._lastCharCount = -1;
             this.typeEl.textContent = '';
 
-            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (!this.gyroEnabled && Quality.current.gyro && !reduced) {
-                this.motionBtn.classList.add('is-visible');
-            }
-
             setTimeout(() => { if (window.currentView === 'echo') document.getElementById('echo-intro-text').classList.add('visible'); }, 260);
             setTimeout(() => { if (window.currentView === 'echo') { const title = document.getElementById('echo-title-text'); title.classList.add('visible', 'echo-flow-gradient'); } }, 910);
             setTimeout(() => { if (window.currentView === 'echo') this.arrivalStarted = true; }, 1800);
             setTimeout(() => { if (window.currentView === 'echo') this.canInteract = true; }, 4000);
 
             AppRenderer.show();
-        },
-
-        exit() {
-            this.motionBtn.classList.remove('is-visible');
         },
 
         resize(w, h) {
@@ -2305,18 +2297,6 @@
             let scrollP = this.currentScroll / this.viewportHeightRef;
             let burnP = Math.min(Math.max(scrollP / 1.5, 0.0), 1.0); this.clusterMaterial.uniforms.uBurnProgress.value = burnP;
             let clearP = Math.min(Math.max((scrollP - 1.5) / 1.0, 0.0), 1.0); this.clusterMaterial.uniforms.uClearProgress.value = clearP;
-
-            let spatialStrength = smoothstepJS(2.0, 3.0, scrollP) * (1.0 - smoothstepJS(6.0, 7.0, scrollP));
-            this.currentCamX = approach(this.currentCamX, this.targetCamX * spatialStrength, 0.05, dt);
-            this.currentCamY = approach(this.currentCamY, this.targetCamY * spatialStrength, 0.05, dt);
-
-            this.camera.position.x = this.currentCamX * 0.3;
-            this.camera.position.y = this.baseCamY + this.currentCamY * 0.3;
-            this.camera.lookAt(0, this.baseCamY, 0);
-
-            let targetFov = 45 + (Math.abs(this.currentCamX) + Math.abs(this.currentCamY)) * 2.0;
-            this.currentFov = approach(this.currentFov, targetFov, 0.05, dt);
-            this.camera.fov = this.currentFov; this.camera.updateProjectionMatrix();
 
             // --- P1-7: diffed DOM writes below ---
             let textOpacity = 1.0;
@@ -2361,7 +2341,8 @@
 
             this.atmMat.uniforms.uAtmosphereProgress.value = Math.min(Math.max((scrollP - 2.6) / 1.0, 0.0), 1.0);
             this.atmMat.uniforms.uTime.value = this.elapsed;
-            this.atmMat.uniforms.uCamOffset.value.set(this.currentCamX, this.currentCamY);
+            // Camera-offset atmosphere parallax removed along with the gyro/parallax
+            // system — uCamOffset stays at its initial (0,0) permanently.
 
             this.videoWrappers.forEach((wrapper, index) => {
                 const state = this._cardState[index];
@@ -2419,10 +2400,6 @@
         }
     });
 
-    function smoothstepJS(min, max, value) {
-        let x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-        return x * x * (3 - 2 * x);
-    }
     function easeOutExpo(x) { return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); }
 
     /* ==========================================================================
@@ -2482,6 +2459,11 @@
             this.particlesTriggered = false;
             this.heroHasPlayed = false;
 
+            this.powerVid = ManagedVideos.track(document.getElementById('power-vid'));
+
+            attachLoadResilience(this.pulseHeroVid);
+            attachLoadResilience(this.powerVid);
+
             this.pulseHeroVid.pause();
             this.pulseHeroVid.currentTime = 0;
 
@@ -2500,7 +2482,7 @@
                     opacity: 1, scale: 1, duration: 0.8, ease: "power3.out",
                     onComplete: () => {
                         if (this.isPulseHeroInView && window.currentView === 'pulse') {
-                            if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                            eagerLoadVideo(this.pulseHeroVid);
                             this.pulseHeroVid.play().catch((e) => console.warn("Autoplay prevented:", e));
                         }
                     }
@@ -2536,7 +2518,7 @@
             this.pulseHeroPlayBtn.addEventListener('click', () => {
                 this.pulseHeroPlayBtn.classList.remove('visible');
                 this.particlesTriggered = false;
-                if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                eagerLoadVideo(this.pulseHeroVid);
                 this.pulseHeroVid.play();
             });
 
@@ -2544,7 +2526,7 @@
                 entries.forEach((entry) => {
                     this.isPulseHeroInView = entry.isIntersecting;
                     if (this.isPulseHeroInView && window.currentView === 'pulse') {
-                        if (this.pulseHeroVid.preload === 'none') this.pulseHeroVid.preload = 'auto';
+                        eagerLoadVideo(this.pulseHeroVid);
                         if (!this.isWaitingToLoop && this.pulseHeroVid.paused && this.pulseHeroVid.currentTime > 0 && this.particleTriggerCount < 3) {
                             this.pulseHeroVid.play().catch(() => {});
                         }
@@ -2560,15 +2542,18 @@
                 { opacity: 1, scale: 1.15, duration: 1.5, ease: "power3.out", scrollTrigger: { trigger: "#power-video-module", start: "top 85%", toggleActions: "play reset play reset" } }
             );
 
-            const powerVid = ManagedVideos.track(document.getElementById('power-vid'));
+            const powerVid = this.powerVid;
+            // rootMargin extends the trigger zone ~40% of the viewport ahead of the
+            // element's actual entry, so the play() request below lands well after
+            // buffering has already started (on top of the eager-load on pulse entry).
             const powerObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting && window.currentView === 'pulse') {
-                        if (powerVid.preload === 'none') powerVid.preload = 'auto';
+                        eagerLoadVideo(powerVid);
                         powerVid.play().catch(() => {});
                     } else powerVid.pause();
                 });
-            }, { threshold: 0.1 });
+            }, { threshold: 0.1, rootMargin: '40% 0px 40% 0px' });
             powerObserver.observe(document.getElementById('power-video-module'));
 
             const uiTl = gsap.timeline({ scrollTrigger: { trigger: "#ui-info", start: "top 80%", toggleActions: "play reset play reset" } });
@@ -2584,7 +2569,7 @@
             const physicsContainer = document.getElementById('physics-carousel-container');
             const onboardingPrompt = document.querySelector('.onboarding-prompt');
 
-            let selectedCard = null, isDraggingCard = false, draggedCardIndex = -1;
+            let selectedCard = null, isDraggingCard = false, draggedCardIndex = -1, pressedCardIndex = -1;
             let startPointerX = 0, startPointerY = 0, hasInteracted = false;
 
             const cardData = Array.from(physicsCards).map(() => ({
@@ -2631,18 +2616,60 @@
                         if (selectedCard !== i) { video.pause(); video.currentTime = 0; }
                     }
                 });
+
+                // Selecting/playing a card on tap or release, shared by both the mobile
+                // (no-drag) and desktop (drag-aware) paths below.
+                const selectAndPlay = () => {
+                    if (selectedCard === i) {
+                        if (video.preload === 'none') video.preload = 'auto';
+                        video.play().catch(() => {});
+                        return;
+                    }
+                    if (selectedCard !== null) {
+                        const oldVideo = physicsCards[selectedCard].querySelector('video');
+                        oldVideo.pause(); oldVideo.currentTime = 0;
+                    }
+                    selectedCard = i;
+                    cardData[i].isHovered = false;
+                    card.classList.remove('is-hovered');
+                    video.currentTime = 0;
+                    if (video.preload === 'none') video.preload = 'auto';
+                    video.play().catch(() => {});
+                };
+
                 card.addEventListener('pointerdown', (e) => {
+                    if (isNarrowViewport()) {
+                        // Mobile: no drag tracking at all — never capture the pointer,
+                        // never touch touch-action. That's what was contesting vertical
+                        // scroll and causing the card titles to flash. A tap still
+                        // selects/plays via pointerup below.
+                        pressedCardIndex = i;
+                        video.pause();
+                        if (!hasInteracted) { hasInteracted = true; }
+                        return;
+                    }
                     isDraggingCard = true; draggedCardIndex = i; startPointerX = e.clientX; startPointerY = e.clientY;
                     card.classList.add('is-dragging'); // P0-2: only suppress scroll on the card actively being dragged
                     card.setPointerCapture(e.pointerId); video.pause();
                     if (!hasInteracted) { hasInteracted = true; onboardingPrompt.style.opacity = 0; }
                 });
                 card.addEventListener('pointermove', (e) => {
+                    if (isNarrowViewport()) return; // mobile never tracks drag offset
                     if (!isDraggingCard || draggedCardIndex !== i) return;
                     cardData[i].dragOffsetX = e.clientX - startPointerX; cardData[i].dragOffsetY = e.clientY - startPointerY;
                 });
 
                 const handleCardRelease = (e) => {
+                    if (isNarrowViewport()) {
+                        // A genuine tap: select/play. A cancelled pointer (the browser
+                        // handed the gesture to page scroll instead) should not.
+                        if (pressedCardIndex !== i) return;
+                        pressedCardIndex = -1;
+                        if (e.type === 'pointercancel') return;
+                        selectAndPlay();
+                        return;
+                    }
+
                     if (!isDraggingCard || draggedCardIndex !== i) return;
                     isDraggingCard = false; draggedCardIndex = -1;
                     card.classList.remove('is-dragging');
@@ -2652,21 +2679,7 @@
                     try { card.releasePointerCapture(e.pointerId); } catch (err) {}
 
                     if (dragDist < CONFIG.physics.dragThreshold) {
-                        if (selectedCard === i) {
-                            if (video.preload === 'none') video.preload = 'auto';
-                            video.play().catch(() => {});
-                        } else {
-                            if (selectedCard !== null) {
-                                const oldVideo = physicsCards[selectedCard].querySelector('video');
-                                oldVideo.pause(); oldVideo.currentTime = 0;
-                            }
-                            selectedCard = i;
-                            cardData[i].isHovered = false;
-                            card.classList.remove('is-hovered');
-                            video.currentTime = 0;
-                            if (video.preload === 'none') video.preload = 'auto';
-                            video.play().catch(() => {});
-                        }
+                        selectAndPlay();
                     } else {
                         if (selectedCard === i) {
                             if (video.preload === 'none') video.preload = 'auto';
@@ -2950,6 +2963,14 @@
         },
 
         enter() {
+            // Kick off buffering for the hero and power videos as early as possible —
+            // right on view entry, well before the ~2s entrance animation completes and
+            // hero.play() is requested, and well before the user can scroll to power-vid.
+            // This is the actual fix for the reported load failures/lateness: previously
+            // loading only began at (or a frame before) the moment playback was requested.
+            eagerLoadVideo(this.pulseHeroVid);
+            eagerLoadVideo(this.powerVid);
+
             this.resetEntrance();
             AppRenderer.show();
         },
