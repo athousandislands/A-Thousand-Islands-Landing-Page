@@ -1035,7 +1035,13 @@
             // titles look like they were flickering).
             idleBobAmplitude: { mobile: 7, desktop: 11 },
             idleRotAmplitude: { mobile: 1.1, desktop: 1.7 },
-            maxVerticalTravel: { mobile: 20, desktop: 32 }
+            maxVerticalTravel: { mobile: 20, desktop: 32 },
+            // Extra restoring pull applied to velocity (not position) once a card is
+            // past maxVerticalTravel — a soft boundary rather than a hard one, so
+            // there's never an instant position reassignment to see as a snap. Higher
+            // than the idle tension above so it actually reins a card in, but gentle
+            // enough that it still reads as spring motion, not a wall.
+            extraRestoreTension: 0.025
         },
         echo: {
             arrivalDuration: 2.9,
@@ -2324,7 +2330,7 @@
                 orbY = -visibleHeight * 0.15; camLookY = 0; shellRadius = 0.52;
                 ashColor = [0.12, 0.12, 0.12];
             } else {
-                orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; shellRadius = 0.59;
+                orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; shellRadius = 0.54;
                 ashColor = [0.30, 0.30, 0.30];
             }
 
@@ -2932,17 +2938,19 @@
                 data.x += data.vx * ticks; data.y += data.vy * ticks; data.z += data.vz * ticks;
                 data.rotX += data.vRotX * ticks; data.rotY += data.vRotY * ticks; data.rotZ += data.vRotZ * ticks;
 
-                // Hard cap on how far a card can wander vertically from its resting spot
-                // while idling — without this, the spring could still overshoot on a
-                // long, uninterrupted float and cross paths with a neighboring card,
-                // which is what made the title underneath look like it was flickering
-                // (it wasn't flickering — it was briefly covered by the card drifting
-                // over it). Velocity is bled off at the boundary rather than zeroed, so
-                // it still feels like a soft, tactile stop rather than a hard wall.
+                // Soft boundary: instead of overwriting data.y (a real teleport), add
+                // extra pull toward the resting spot once a card is past the travel
+                // limit — the same spring mechanism as everything else, just stronger
+                // beyond the boundary. Position is never directly reassigned here, so
+                // there is no discontinuity to see regardless of how a card got outside
+                // the box (drag release, deselecting a focused card, or genuine idle
+                // drift all go through this same path uniformly). Scaled by ticks like
+                // the rest of the spring so it isn't stronger on higher-refresh screens.
                 if (isIdle) {
                     const minY = data.baseTy - travelLimit, maxY = data.baseTy + travelLimit;
-                    if (data.y < minY) { data.y = minY; if (data.vy < 0) data.vy *= 0.3; }
-                    else if (data.y > maxY) { data.y = maxY; if (data.vy > 0) data.vy *= 0.3; }
+                    const effRestore = CONFIG.physics.extraRestoreTension * ticks;
+                    if (data.y < minY) data.vy += (minY - data.y) * effRestore;
+                    else if (data.y > maxY) data.vy += (maxY - data.y) * effRestore;
                 }
 
                 if (isNaN(data.x) || isNaN(data.y) || isNaN(data.z)) {
