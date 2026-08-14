@@ -240,14 +240,19 @@
             transition: opacity 1s cubic-bezier(0.25, 1, 0.5, 1), transform 1s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .home-scroll-indicator.is-visible { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-        .home-scroll-indicator-inner {
+
+        /* Shared "Scroll Down" prompt typography — used on Home and Echo so both
+           read as the same UI element. Slightly heavier weight, tighter tracking,
+           and a bigger size than the original pass gives it more presence without
+           looking shouty (still not bold, just a step up from thin/regular). */
+        .scroll-prompt-text {
             display: inline-block;
-            font-family: var(--font-family); font-weight: 400;
-            font-size: 0.98rem; letter-spacing: 0.04em;
+            font-family: var(--font-family); font-weight: 600;
+            font-size: 1.08rem; letter-spacing: 0.01em;
             color: var(--text-main);
-            animation: homeScrollPulse 3.6s infinite ease-in-out;
+            animation: scrollPromptPulse 3.6s infinite ease-in-out;
         }
-        @keyframes homeScrollPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+        @keyframes scrollPromptPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 
         #home-reveal-content {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -286,7 +291,18 @@
            6. ECHO SECTION
            ========================================================================== */
         #echo-view { display: none; width: 100%; position: relative; }
-        #echo-scroll-indicator { bottom: 15%; top: auto; }
+
+        /* Same shared "Scroll Down" prompt as Home, positioned for Echo's layout.
+           Moved a bit lower (9% -> 5%) so it sits clearly below the orb now that the
+           orb's desktop position is reinstated higher up — no overlap either way, but
+           the extra clearance was asked for regardless. */
+        .echo-scroll-prompt {
+            position: fixed; left: 50%; bottom: calc(5% + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%) translateY(8px) scale(0.94);
+            z-index: 10; opacity: 0; pointer-events: none;
+            transition: opacity 1s cubic-bezier(0.25, 1, 0.5, 1), transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .echo-scroll-prompt.is-visible { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
         #echo-landing-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; will-change: transform, opacity; }
         #echo-landing-ui { position: absolute; top: 14vh; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
@@ -457,14 +473,20 @@
            letterboxes instead of cropping. */
         .ui-laptop-img { width: 100%; max-width: 800px; height: auto; display: block; align-self: center; object-fit: contain; }
 
-        #features-section { width: 100%; background: transparent; padding-bottom: 8rem; z-index: 100; position: relative; }
-        .features-header { padding: 8rem 2rem 4rem; text-align: center; }
+        /* Section padding reduced (was 8rem/4rem) — the previous values left a lot of
+           empty space above the intro text and below the tiles. Trimmed while keeping
+           enough top padding to still read as a clear break from the section above. */
+        #features-section { width: 100%; background: transparent; padding-bottom: 5rem; z-index: 100; position: relative; }
+        .features-header { padding: 5.5rem 2rem 2.5rem; text-align: center; }
         .features-intro { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
 
         /* P0-2: was touch-action:none, which trapped vertical scroll over the whole
-           80vh carousel on mobile. pan-y lets the browser keep handling vertical swipes;
-           only an in-progress card drag suppresses it (toggled in JS per-card). */
-        #physics-carousel-container { position: relative; width: 100%; height: 80vh; height: 80dvh; min-height: 600px; display: flex; justify-content: center; align-items: center; perspective: 1200px; touch-action: pan-y; }
+           carousel on mobile. pan-y lets the browser keep handling vertical swipes;
+           only an in-progress card drag suppresses it (toggled in JS per-card).
+           Height reduced from a flat 80vh (which was much taller than the cards
+           actually need, reading as "excessive empty space") to a bounded range that
+           gives the tiles a clearly-defined, contained area to float in instead. */
+        #physics-carousel-container { position: relative; width: 100%; height: 60vh; height: 60dvh; min-height: 440px; max-height: 640px; display: flex; justify-content: center; align-items: center; perspective: 1200px; touch-action: pan-y; }
         .onboarding-prompt {
             position: absolute; left: 50%; transform: translate(-50%, 0);
             color: rgba(255, 255, 255, 0.8); font-family: "SF Pro Display", -apple-system, sans-serif;
@@ -625,8 +647,9 @@
             .ui-desc { font-size: 1.56rem; }
             .ui-img-col { width: 100%; margin: 0; }
             .ui-laptop-img { width: 100%; max-width: none; transform: scale(0.9); transform-origin: right center; }
-            #features-section { padding-bottom: 40px; }
-            .features-header { padding: 40px 1.5rem 2rem; }
+            #features-section { padding-bottom: 28px; }
+            .features-header { padding: 36px 1.5rem 1.5rem; }
+            #physics-carousel-container { height: 54vh; height: 54dvh; min-height: 380px; max-height: 520px; }
             .physics-card { width: clamp(160px, 42vw, 280px); padding: 6px; border-radius: 18px; }
             .video-wrapper { border-radius: 12px; }
             /* Cards keep floating/select/play on mobile — only dragging (and the prompt
@@ -660,7 +683,7 @@
             .onboarding-prompt,
             .glass-btn.contact-btn,
             .modal-sway-wrapper,
-            .home-scroll-indicator-inner {
+            .scroll-prompt-text {
                 animation: none !important;
             }
             *, *::before, *::after {
@@ -735,7 +758,7 @@
 <!-- Home View -->
 <div id="home-view">
     <div id="home-scroll-indicator" class="home-scroll-indicator" aria-hidden="true">
-        <span class="home-scroll-indicator-inner">Scroll Down</span>
+        <span class="scroll-prompt-text">Scroll Down</span>
     </div>
     <div id="home-reveal-content">
         <div class="reveal-text">
@@ -774,11 +797,9 @@
         </div>
     </div>
 
-    <div id="echo-scroll-indicator" class="tap-icon-container">
-        <img class="tap-icon-svg" src="./pulse/gallery/tap.svg" alt="" width="110" height="135">
+    <div id="echo-scroll-indicator" class="echo-scroll-prompt">
+        <span class="scroll-prompt-text">Scroll Down</span>
     </div>
-
-    <!-- P2-8: visible, explicit control instead of hijacking the first tap anywhere on the site -->
 
     <div id="echo-hero-video-wrapper">
         <video id="echo-hero-video" src="./echo/videos/echo-hero-visual.mp4" playsinline preload="none"></video>
@@ -1001,10 +1022,20 @@
        ========================================================================== */
     const CONFIG = {
         physics: {
-            tension: { default: 0.006, hover: 0.025, drag: 0.15 },
-            friction: { default: 0.82, hover: 0.88, drag: 0.75 },
-            maxVelocity: 120,
-            dragThreshold: 10
+            // Tension slightly lower and friction slightly higher (more damping) than
+            // before across the board, for a calmer, more refined float on desktop.
+            tension: { default: 0.0045, hover: 0.022, drag: 0.15 },
+            friction: { default: 0.86, hover: 0.90, drag: 0.75 },
+            maxVelocity: 100,
+            dragThreshold: 10,
+            // How far the idle floating motion is allowed to bob/rotate, and a hard
+            // cap on total vertical travel from a card's resting position — mobile
+            // gets a noticeably calmer, smaller-range float than desktop so the cards
+            // don't drift into/behind each other (that overlap was what made the
+            // titles look like they were flickering).
+            idleBobAmplitude: { mobile: 7, desktop: 11 },
+            idleRotAmplitude: { mobile: 1.1, desktop: 1.7 },
+            maxVerticalTravel: { mobile: 20, desktop: 32 }
         },
         echo: {
             arrivalDuration: 2.9,
@@ -1058,7 +1089,7 @@
        ========================================================================== */
     const Quality = (() => {
         const profiles = {
-            low:  { dprCap: 1.25, particleScale: 0.45, maxPointSize: 120, backdropBlur: false },
+            low:  { dprCap: 1.25, particleScale: 0.45, maxPointSize: 145, backdropBlur: false },
             mid:  { dprCap: 1.5,  particleScale: 0.7,  maxPointSize: 180, backdropBlur: true  },
             high: { dprCap: 2.0,  particleScale: 1.0,  maxPointSize: 250, backdropBlur: true  }
         };
@@ -1597,7 +1628,10 @@
                         vec2 xy = gl_PointCoord.xy - vec2(0.5);
                         float ll = length(xy);
                         if (ll > 0.5) discard;
-                        float alpha = smoothstep(0.5, 0.1, ll) * 0.8;
+                        // Tighter core (was 0.1) + near-full opacity (was 0.8) so each
+                        // particle reads as a crisp, bright dot instead of a soft blur —
+                        // still has a thin feathered edge so it stays smooth, not jagged.
+                        float alpha = smoothstep(0.5, 0.3, ll) * 0.95;
                         gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
                     }
                 `,
@@ -1794,7 +1828,12 @@
                     void main() {
                         vec2 xy = gl_PointCoord.xy - vec2(0.5);
                         if (length(xy) > 0.5) discard;
-                        gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.0, length(xy)) * 0.8);
+                        // Same definition fix as the homepage orb: solid-feeling core
+                        // (edge moved from 0.0 to 0.33) at near-full opacity (0.8 -> 0.95)
+                        // instead of a fully-gradient, faint disc — reads as a clean white
+                        // point rather than a soft smudge, especially noticeable on mobile
+                        // where fewer/smaller particles made the softness read as "faint."
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.33, length(xy)) * 0.95);
                     }
                 `,
                 transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -2013,11 +2052,11 @@
             `;
 
             const dynamicFragmentStage = `
-                uniform float uBootProgress; uniform float uClearProgress;
+                uniform float uBootProgress; uniform float uClearProgress; uniform vec3 uAshShell;
                 varying float vThermalState; varying float vGlowIntensity; varying float vAlpha; varying float vType;
                 vec3 getFireColor(float state) {
-                    vec3 ashShell = vec3(0.12, 0.12, 0.12); vec3 darkRed = vec3(0.55, 0.05, 0.00); vec3 moltenOrange = vec3(0.90, 0.25, 0.00); vec3 peakGold = vec3(1.00, 0.60, 0.05);
-                    if (state < 0.30) return mix(ashShell, darkRed, smoothstep(0.0, 0.30, state));
+                    vec3 darkRed = vec3(0.55, 0.05, 0.00); vec3 moltenOrange = vec3(0.90, 0.25, 0.00); vec3 peakGold = vec3(1.00, 0.60, 0.05);
+                    if (state < 0.30) return mix(uAshShell, darkRed, smoothstep(0.0, 0.30, state));
                     else if (state < 0.90) return mix(darkRed, moltenOrange, smoothstep(0.30, 0.90, state));
                     else return mix(moltenOrange, peakGold, smoothstep(0.90, 1.0, state));
                 }
@@ -2032,44 +2071,20 @@
                 }
             `;
 
-            const totalParticles = Math.max(200, Math.round(2550 * Quality.current.particleScale));
-            const structuralGeometry = new THREE.BufferGeometry();
-            const spatialCoords = new Float32Array(totalParticles * 3);
-            const randomPhases = new Float32Array(totalParticles);
-            const types = new Float32Array(totalParticles);
-            const drifts = new Float32Array(totalParticles * 3);
-            const startCoords = new Float32Array(totalParticles * 3);
-
-            let indices = Array.from({ length: totalParticles }, (_, i) => i);
-            for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
-
-            for (let i = 0; i < totalParticles; i++) {
-                let idx = indices[i];
-                const phi = Math.acos(-1 + (2 * idx) / totalParticles); const theta = Math.sqrt(totalParticles * Math.PI) * phi;
-                spatialCoords[idx * 3] = Math.cos(theta) * Math.sin(phi); spatialCoords[idx * 3 + 1] = Math.sin(theta) * Math.sin(phi); spatialCoords[idx * 3 + 2] = Math.cos(phi);
-                randomPhases[idx] = Math.random();
-                if (i < 2) types[idx] = 0.999; else if (i < 6) types[idx] = 0.990; else if (i < 8) types[idx] = 0.982; else types[idx] = Math.random() < 0.925 ? Math.random() * 0.924 : 0.925 + Math.random() * 0.05;
-                const u = Math.random(), v = Math.random(); const thetaDrift = u * 2.0 * Math.PI; const phiDrift = Math.acos(2.0 * v - 1.0); const speed = Math.random() * 0.36 + 0.12;
-                drifts[idx * 3] = speed * Math.sin(phiDrift) * Math.cos(thetaDrift); drifts[idx * 3 + 1] = speed * Math.sin(phiDrift) * Math.sin(thetaDrift); drifts[idx * 3 + 2] = speed * Math.cos(phiDrift);
-
-                startCoords[idx * 3] = (Math.random() - 0.5) * 20.0;
-                startCoords[idx * 3 + 1] = (Math.random() - 0.5) * 20.0;
-                startCoords[idx * 3 + 2] = 4.5 + Math.random() * 2.0;
-            }
-
-            structuralGeometry.setAttribute('position', new THREE.BufferAttribute(spatialCoords, 3));
-            structuralGeometry.setAttribute('pRandomPhase', new THREE.BufferAttribute(randomPhases, 1));
-            structuralGeometry.setAttribute('aType', new THREE.BufferAttribute(types, 1));
-            structuralGeometry.setAttribute('aDrift', new THREE.BufferAttribute(drifts, 3));
-            structuralGeometry.setAttribute('aStartPos', new THREE.BufferAttribute(startCoords, 3));
-
             this.clusterMaterial = new THREE.ShaderMaterial({
                 vertexShader: dynamicVertexStage, fragmentShader: dynamicFragmentStage,
-                uniforms: { uTimeline: { value: 0 }, uMirrorProgress: { value: 0 }, uShellRadius: { value: 0.3915 }, uBootProgress: { value: 0 }, uBurnProgress: { value: 0 }, uArrivalProgress: { value: 0 }, uClearProgress: { value: 0 } },
+                uniforms: {
+                    uTimeline: { value: 0 }, uMirrorProgress: { value: 0 }, uShellRadius: { value: 0.52 },
+                    uBootProgress: { value: 0 }, uBurnProgress: { value: 0 }, uArrivalProgress: { value: 0 }, uClearProgress: { value: 0 },
+                    uAshShell: { value: new THREE.Vector3(0.12, 0.12, 0.12) }
+                },
                 transparent: true, depthWrite: false
             });
-            this.organicMesh = new THREE.Points(structuralGeometry, this.clusterMaterial);
-            this.scene.add(this.organicMesh);
+            // Geometry (particle count/positions) is built by rebuildCluster(), called
+            // from updateLayout() below — this lets the particle count be regenerated
+            // whenever the device's shell size changes instead of being fixed at page
+            // load.
+            this._lastTotalParticles = 0;
 
             const atmCount = Math.max(40, Math.round(300 * Quality.current.particleScale));
             const atmGeo = new THREE.BufferGeometry();
@@ -2145,13 +2160,16 @@
             this._lastCharCount = -1;
             this._cardState = Array.from(this.videoWrappers).map(() => ({ display: null, transform: null, opacity: null }));
 
+            // Rec 7: previously this measured getBoundingClientRect() for every
+            // interactive element on every raw mousemove event — on a high-poll-rate
+            // mouse/trackpad that's easily 100+ forced layout reads per second, far
+            // more often than the page even renders a frame. Now the handler only
+            // records the cursor position (cheap); the actual measuring happens once
+            // per rendered frame inside update(dt) below.
+            this._lastMouseX = null; this._lastMouseY = null;
             document.addEventListener('mousemove', (e) => {
                 if (window.currentView !== 'echo') return;
-                document.querySelectorAll('.echo-interactive-element').forEach((el) => {
-                    const rect = el.getBoundingClientRect();
-                    el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-                    el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-                });
+                this._lastMouseX = e.clientX; this._lastMouseY = e.clientY;
             });
 
             window.addEventListener('scroll', () => {
@@ -2241,15 +2259,74 @@
             }
         },
 
+        // Rebuilds the shell's particle geometry at a given count. Called from
+        // updateLayout() whenever the target count changes (device/breakpoint change),
+        // not just once at boot, so mobile's larger shell gets a
+        // proportionally denser particle set instead of the desktop count stretched
+        // thin over a bigger sphere.
+        rebuildCluster(totalParticles) {
+            const structuralGeometry = new THREE.BufferGeometry();
+            const spatialCoords = new Float32Array(totalParticles * 3);
+            const randomPhases = new Float32Array(totalParticles);
+            const types = new Float32Array(totalParticles);
+            const drifts = new Float32Array(totalParticles * 3);
+            const startCoords = new Float32Array(totalParticles * 3);
+
+            let indices = Array.from({ length: totalParticles }, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
+
+            for (let i = 0; i < totalParticles; i++) {
+                let idx = indices[i];
+                const phi = Math.acos(-1 + (2 * idx) / totalParticles); const theta = Math.sqrt(totalParticles * Math.PI) * phi;
+                spatialCoords[idx * 3] = Math.cos(theta) * Math.sin(phi); spatialCoords[idx * 3 + 1] = Math.sin(theta) * Math.sin(phi); spatialCoords[idx * 3 + 2] = Math.cos(phi);
+                randomPhases[idx] = Math.random();
+                if (i < 2) types[idx] = 0.999; else if (i < 6) types[idx] = 0.990; else if (i < 8) types[idx] = 0.982; else types[idx] = Math.random() < 0.925 ? Math.random() * 0.924 : 0.925 + Math.random() * 0.05;
+                const u = Math.random(), v = Math.random(); const thetaDrift = u * 2.0 * Math.PI; const phiDrift = Math.acos(2.0 * v - 1.0); const speed = Math.random() * 0.36 + 0.12;
+                drifts[idx * 3] = speed * Math.sin(phiDrift) * Math.cos(thetaDrift); drifts[idx * 3 + 1] = speed * Math.sin(phiDrift) * Math.sin(thetaDrift); drifts[idx * 3 + 2] = speed * Math.cos(phiDrift);
+
+                startCoords[idx * 3] = (Math.random() - 0.5) * 20.0;
+                startCoords[idx * 3 + 1] = (Math.random() - 0.5) * 20.0;
+                startCoords[idx * 3 + 2] = 4.5 + Math.random() * 2.0;
+            }
+
+            structuralGeometry.setAttribute('position', new THREE.BufferAttribute(spatialCoords, 3));
+            structuralGeometry.setAttribute('pRandomPhase', new THREE.BufferAttribute(randomPhases, 1));
+            structuralGeometry.setAttribute('aType', new THREE.BufferAttribute(types, 1));
+            structuralGeometry.setAttribute('aDrift', new THREE.BufferAttribute(drifts, 3));
+            structuralGeometry.setAttribute('aStartPos', new THREE.BufferAttribute(startCoords, 3));
+
+            if (this.organicMesh) {
+                this.organicMesh.geometry.dispose();
+                this.organicMesh.geometry = structuralGeometry;
+            } else {
+                this.organicMesh = new THREE.Points(structuralGeometry, this.clusterMaterial);
+                this.scene.add(this.organicMesh);
+            }
+            this._lastTotalParticles = totalParticles;
+        },
+
         updateLayout() {
             const w = window.innerWidth, h = window.innerHeight;
             this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
             const vFov = this.camera.fov * Math.PI / 180;
             const visibleHeight = 2 * Math.tan(vFov / 2) * this.camera.position.z;
 
-            let orbY = 0, camLookY = 0;
-            if (w >= CONFIG.breakpoints.desktopMin) { orbY = -visibleHeight * 0.15; camLookY = 0; }
-            else { orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; }
+            // Reinstated to the original per-breakpoint framing (desktop had drifted
+            // lower in a previous pass, which pushed it into the "Scroll Down" prompt;
+            // mobile is back to the original "camera looks straight at the orb"
+            // treatment). shellRadius is the one thing that still differs from the
+            // original on mobile: enlarged so the orb's on-screen size matches the
+            // homepage orb's apparent size at rest (worked out from each scene's own
+            // camera distance/FOV — the two scenes use unrelated unit scales, so it
+            // isn't just the same number copied across).
+            let orbY, camLookY, shellRadius, ashColor;
+            if (w >= CONFIG.breakpoints.desktopMin) {
+                orbY = -visibleHeight * 0.15; camLookY = 0; shellRadius = 0.52;
+                ashColor = [0.12, 0.12, 0.12];
+            } else {
+                orbY = visibleHeight * 0.05; camLookY = visibleHeight * 0.05; shellRadius = 0.59;
+                ashColor = [0.30, 0.30, 0.30];
+            }
 
             this.baseCamY = camLookY;
             // Camera parallax/gyro removed — camera now sits at a fixed point looking
@@ -2257,8 +2334,25 @@
             this.camera.position.x = 0;
             this.camera.position.y = this.baseCamY;
             this.camera.lookAt(0, this.baseCamY, 0);
+            this.clusterMaterial.uniforms.uShellRadius.value = shellRadius;
+            this.clusterMaterial.uniforms.uAshShell.value.set(ashColor[0], ashColor[1], ashColor[2]);
+
+            // Mobile's shell is enlarged to match the homepage orb's on-screen size, so
+            // its particle count is scaled by the same area ratio against desktop's
+            // untouched baseline (radius 0.52, 2550 particles) — otherwise the same dot
+            // count spread over a bigger sphere would look noticeably thinner/sparser
+            // than before.
+            const areaRatio = Math.pow(shellRadius / 0.52, 2);
+            const targetParticles = Math.max(200, Math.round(2550 * areaRatio * Quality.current.particleScale));
+            if (targetParticles !== this._lastTotalParticles) {
+                // rebuildCluster() creates this.organicMesh the first time it's called
+                // (there is nothing to rebuild yet on the very first entry) — it must
+                // run before anything below touches this.organicMesh, or that reference
+                // is undefined and throws.
+                this.rebuildCluster(targetParticles);
+            }
+
             this.organicMesh.position.x = 0; this.organicMesh.position.y = orbY;
-            this.clusterMaterial.uniforms.uShellRadius.value = w < CONFIG.breakpoints.desktopMin ? 0.3915 : 0.52;
         },
 
         enter() {
@@ -2290,6 +2384,16 @@
             if (this.bootProgress < 1.0) { this.bootProgress += dt * 1.15; if (this.bootProgress > 1.0) this.bootProgress = 1.0; }
             if (this.canInteract) {
                 this.currentScroll = approach(this.currentScroll, this.targetScroll, this.targetScroll < this.currentScroll ? 0.065 : 0.05, dt);
+            }
+
+            // Rec 7 (continued): the one rect-measuring pass per frame instead of per
+            // mousemove event.
+            if (this._lastMouseX !== null) {
+                document.querySelectorAll('.echo-interactive-element').forEach((el) => {
+                    const rect = el.getBoundingClientRect();
+                    el.style.setProperty('--mouse-x', `${this._lastMouseX - rect.left}px`);
+                    el.style.setProperty('--mouse-y', `${this._lastMouseY - rect.top}px`);
+                });
             }
 
             // P1-5: normalized against a stable reference height, not the live (and, on
@@ -2534,12 +2638,20 @@
                         this.pulseHeroVid.pause();
                     }
                 });
-            }, { root: null, rootMargin: '0px', threshold: 0.5 });
+            }, { root: null, rootMargin: '15% 0px 15% 0px', threshold: 0.15 });
             pulseHeroObserver.observe(document.getElementById('hero-video-module'));
 
+            // toggleActions was "play reset play reset": on a plain (unpinned, unscrubbed)
+            // ScrollTrigger, GSAP's default "end" is the natural bottom of the trigger
+            // element itself — for a modestly-tall section like this, that "end" was
+            // reached (and "reset" fired, instantly snapping opacity back to 0) not long
+            // after the fade-in completed, well before the user had actually finished
+            // looking at the section. "play none none reverse" fades in once on the way
+            // down and stays visible (no action on leave), only reversing — smoothly,
+            // not a snap — if the user scrolls back up above the section's start point.
             gsap.fromTo("#power-video-module",
                 { opacity: 0, scale: 0.85 },
-                { opacity: 1, scale: 1.15, duration: 1.5, ease: "power3.out", scrollTrigger: { trigger: "#power-video-module", start: "top 85%", toggleActions: "play reset play reset" } }
+                { opacity: 1, scale: 1.15, duration: 1.5, ease: "power3.out", scrollTrigger: { trigger: "#power-video-module", start: "top 85%", toggleActions: "play none none reverse" } }
             );
 
             const powerVid = this.powerVid;
@@ -2556,7 +2668,11 @@
             }, { threshold: 0.1, rootMargin: '40% 0px 40% 0px' });
             powerObserver.observe(document.getElementById('power-video-module'));
 
-            const uiTl = gsap.timeline({ scrollTrigger: { trigger: "#ui-info", start: "top 80%", toggleActions: "play reset play reset" } });
+            // Same fix as above, applied to the UI.png section — this is the actual
+            // cause of it "disappearing too quickly": it wasn't a timing value that
+            // needed tweaking, it was an unwanted auto-reset firing on every scroll
+            // past the section. Removing that reset is what makes it stay put.
+            const uiTl = gsap.timeline({ scrollTrigger: { trigger: "#ui-info", start: "top 80%", toggleActions: "play none none reverse" } });
             uiTl.fromTo("#ui-text", { opacity: 0, x: -100 }, { opacity: 1, x: 0, duration: 1.2, ease: "power3.out" })
                 .fromTo("#ui-img", { opacity: 0, x: 100 }, { opacity: 1, x: 0, duration: 1.2, ease: "power3.out" }, "-=0.9");
 
@@ -2581,7 +2697,10 @@
 
             function updateBaseTargets() {
                 const width = window.innerWidth; const isMobile = isNarrowViewport();
-                const yOffset = isMobile ? -120 : 0;
+                // Reduced from -120 to keep the tiles centered within the section's new,
+                // more contained height (was shifting them up so far that, combined with
+                // the taller old container, they read as off-center and adrift).
+                const yOffset = isMobile ? -50 : 0;
                 let maxBottom = 0;
 
                 cardData.forEach((data, i) => {
@@ -2760,16 +2879,25 @@
             const p = this._physics;
             if (!p || !p.isSectionVisible()) return;
             const time = this.elapsed;
+            const mobile = isNarrowViewport();
+            const bobAmp = mobile ? CONFIG.physics.idleBobAmplitude.mobile : CONFIG.physics.idleBobAmplitude.desktop;
+            const rotAmp = mobile ? CONFIG.physics.idleRotAmplitude.mobile : CONFIG.physics.idleRotAmplitude.desktop;
+            const travelLimit = mobile ? CONFIG.physics.maxVerticalTravel.mobile : CONFIG.physics.maxVerticalTravel.desktop;
+            // Extra calming multiplier on top of the base tension — mobile gets a
+            // noticeably softer pull than desktop, per the "less springy on mobile,
+            // slightly less springy on desktop too" request.
+            const calm = mobile ? 0.6 : 0.85;
 
             p.cardData.forEach((data, i) => {
                 const el = p.physicsCards[i];
                 let isSelected = (p.selectedCardRef() === i);
                 let isDraggingThis = (p.isDraggingRef() && p.draggedIndexRef() === i);
-                let currentTension = isSelected ? CONFIG.physics.tension.hover : (isDraggingThis ? CONFIG.physics.tension.drag : CONFIG.physics.tension.default);
+                let isIdle = !isSelected && p.selectedCardRef() === null && !isDraggingThis;
+                let currentTension = (isSelected ? CONFIG.physics.tension.hover : (isDraggingThis ? CONFIG.physics.tension.drag : CONFIG.physics.tension.default)) * calm;
                 let currentFriction = isSelected ? CONFIG.physics.friction.hover : (isDraggingThis ? CONFIG.physics.friction.drag : CONFIG.physics.friction.default);
 
-                let tx = data.baseTx; let ty = data.baseTy + Math.sin(time * 1.2 + i * 2) * 15; let tz = data.baseTz;
-                let tRotX = Math.sin(time * 0.8 + i) * 2; let tRotY = data.baseTRotY + Math.cos(time * 1.1 + i) * 2; let tRotZ = data.baseTRotZ + Math.sin(time * 1.3 + i) * 2;
+                let tx = data.baseTx; let ty = data.baseTy + Math.sin(time * 1.2 + i * 2) * bobAmp; let tz = data.baseTz;
+                let tRotX = Math.sin(time * 0.8 + i) * rotAmp; let tRotY = data.baseTRotY + Math.cos(time * 1.1 + i) * rotAmp; let tRotZ = data.baseTRotZ + Math.sin(time * 1.3 + i) * rotAmp;
                 let targetTextOpacity = 1;
 
                 if (isSelected) {
@@ -2803,6 +2931,19 @@
 
                 data.x += data.vx * ticks; data.y += data.vy * ticks; data.z += data.vz * ticks;
                 data.rotX += data.vRotX * ticks; data.rotY += data.vRotY * ticks; data.rotZ += data.vRotZ * ticks;
+
+                // Hard cap on how far a card can wander vertically from its resting spot
+                // while idling — without this, the spring could still overshoot on a
+                // long, uninterrupted float and cross paths with a neighboring card,
+                // which is what made the title underneath look like it was flickering
+                // (it wasn't flickering — it was briefly covered by the card drifting
+                // over it). Velocity is bled off at the boundary rather than zeroed, so
+                // it still feels like a soft, tactile stop rather than a hard wall.
+                if (isIdle) {
+                    const minY = data.baseTy - travelLimit, maxY = data.baseTy + travelLimit;
+                    if (data.y < minY) { data.y = minY; if (data.vy < 0) data.vy *= 0.3; }
+                    else if (data.y > maxY) { data.y = maxY; if (data.vy > 0) data.vy *= 0.3; }
+                }
 
                 if (isNaN(data.x) || isNaN(data.y) || isNaN(data.z)) {
                     data.x = data.baseTx; data.y = data.baseTy; data.z = data.baseTz;
