@@ -1,2 +1,6 @@
 .DS_Store
 node_modules/
+dist-redesign/
+.vercel/
+.env*
+!.env.example
