@@ -1,0 +1,120 @@
+{
+  "profiles": {
+    "Desktop": {
+      "background": {
+        "blue": "#cfe0e4",
+        "sage": "#eff6f1",
+        "grain": 0.055
+      },
+      "layout": {
+        "menuSize": 84,
+        "menuHorizontal": 0,
+        "menuVertical": 0,
+        "lineSpacing": 103,
+        "contactHorizontal": 0.5,
+        "contactVertical": 0,
+        "focusBlur": 16
+      },
+      "spacing": {
+        "homeToProcess": 0,
+        "processToWork": 0,
+        "workToContact": -3
+      },
+      "typography": {
+        "typeface": "noto",
+        "weight": "600",
+        "tracking": -61,
+        "processSize": 93,
+        "contactSize": 95,
+        "emailSize": 76
+      }
+    },
+    "Phone": {
+      "background": {
+        "blue": "#e6eef0",
+        "sage": "#e9f2ec",
+        "grain": 0.05
+      },
+      "layout": {
+        "menuSize": 87,
+        "menuHorizontal": 0,
+        "menuVertical": -1.5,
+        "lineSpacing": 105,
+        "contactHorizontal": 0,
+        "contactVertical": 0,
+        "focusBlur": 11
+      },
+      "spacing": {
+        "homeToProcess": 0,
+        "processToWork": 0,
+        "workToContact": -3
+      },
+      "typography": {
+        "typeface": "noto",
+        "weight": "600",
+        "tracking": -65,
+        "processSize": 108,
+        "contactSize": 100,
+        "emailSize": 100
+      }
+    },
+    "Tablet Portrait": {
+      "background": {
+        "blue": "#e6eef0",
+        "sage": "#e9f2ec",
+        "grain": 0.05
+      },
+      "layout": {
+        "menuSize": 87,
+        "menuHorizontal": 0,
+        "menuVertical": -1.5,
+        "lineSpacing": 105,
+        "contactHorizontal": 0,
+        "contactVertical": 0,
+        "focusBlur": 5.5
+      },
+      "spacing": {
+        "homeToProcess": 0,
+        "processToWork": 0,
+        "workToContact": -3
+      },
+      "typography": {
+        "typeface": "noto",
+        "weight": "600",
+        "tracking": -65,
+        "processSize": 100,
+        "contactSize": 129,
+        "emailSize": 109
+      }
+    },
+    "Tablet Landscape": {
+      "background": {
+        "blue": "#e6eef0",
+        "sage": "#e9f2ec",
+        "grain": 0.05
+      },
+      "layout": {
+        "menuSize": 102,
+        "menuHorizontal": 0,
+        "menuVertical": -2,
+        "lineSpacing": 103,
+        "contactHorizontal": 0,
+        "contactVertical": 0,
+        "focusBlur": 5.5
+      },
+      "spacing": {
+        "homeToProcess": 0,
+        "processToWork": 0,
+        "workToContact": -3
+      },
+      "typography": {
+        "typeface": "noto",
+        "weight": "600",
+        "tracking": -65,
+        "processSize": 100,
+        "contactSize": 129,
+        "emailSize": 109
+      }
+    }
+  }
+}

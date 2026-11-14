@@ -1,0 +1,83 @@
+@font-face {
+  font-family: 'Footer Noto Sans';
+  src: url('./assets/fonts/noto-sans-medium.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+.site:has(+ #contact:target) .header :is(.wordmark, .controls) { animation: none; }
+
+.footer-contact {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 25.6vw, 460px);
+  align-items: end;
+  min-height: max(420px, 100svh);
+  padding: 0 max(3.6vw, env(safe-area-inset-right)) calc(clamp(22px, 4svh, 44px) + env(safe-area-inset-bottom)) max(2.78vw, env(safe-area-inset-left));
+  color: #080a09;
+}
+
+#contact-title {
+  position: absolute;
+  top: min(38.8%, calc(100% - 4em - 78px));
+  inset-inline-start: max(2.35vw, env(safe-area-inset-left));
+  margin: 0;
+  font-family: 'Footer Noto Sans', 'Noto Sans', sans-serif;
+  font-size: clamp(48px, min(4.86vw, 11svh), 90px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.003em;
+}
+
+.footer-contact__words {
+  display: inline-grid;
+  white-space: nowrap;
+}
+.footer-contact__words > span { grid-area: 1 / 1; }
+
+.footer-contact__email {
+  font-size: clamp(17px, 1.35vw, 24px);
+  line-height: 1.24;
+}
+.footer-contact__email > div { font-family: 'Studio Helvetica', 'Noto Sans', sans-serif; font-weight: 300; }
+.footer-contact a { color: inherit; text-decoration: none; cursor: pointer; }
+.footer-contact a:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.footer-contact__details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'city clock' 'phone phone' 'social copyright';
+  align-items: baseline;
+  justify-items: start;
+  row-gap: clamp(14px, 3.75svh, 36px);
+  line-height: 1.2;
+  font-size: clamp(13px, 1.04vw, 18px);
+}
+.footer-contact__city { grid-area: city; font-size: 1.46em; font-weight: 700; }
+.footer-contact__clock { grid-area: clock; justify-self: end; font-variant-numeric: tabular-nums; }
+.footer-contact__phone { grid-area: phone; margin-top: .8em; }
+.footer-contact__social { grid-area: social; align-self: end; font-size: 1.34em; }
+.footer-contact__copyright { grid-area: copyright; align-self: end; justify-self: end; text-align: right; font-size: .63em; }
+
+:root[data-compact-layout] .footer-contact {
+  --footer-type-width: 1vw;
+  grid-template-columns: 58% 42%;
+  grid-template-rows: 1fr auto;
+  row-gap: clamp(12px, 2svh, 24px);
+  padding: calc(76px + env(safe-area-inset-top)) max(3.75vw, env(safe-area-inset-right)) calc(clamp(15px, 2.8svh, 34px) + env(safe-area-inset-bottom)) max(5.35vw, env(safe-area-inset-left));
+}
+:root[data-compact-layout] #contact-title {
+  position: static;
+  grid-column: 1 / -1;
+  margin-inline-start: -.6vw;
+  font-size: clamp(26px, min(calc(8.3 * var(--footer-type-width)), 10svh), 62px);
+  letter-spacing: -.009em;
+}
+:root[data-compact-layout] .footer-contact__email { font-size: clamp(9px, calc(3 * var(--footer-type-width)), 22px); }
+:root[data-compact-layout] .footer-contact__details { row-gap: clamp(12px, 2.5svh, 28px); font-size: clamp(6px, calc(1.76 * var(--footer-type-width)), 15px); }
+:root[data-phone-layout] .footer-contact { --footer-type-width: 1svmin; }
+:root[data-compact-layout] .footer-contact__city, :root[data-compact-layout] .footer-contact__social { font-size: 1.32em; }
+:root[data-compact-layout] .footer-contact__phone { margin-top: 0; }
+:root[data-compact-layout] .footer-contact__copyright { font-size: .71em; }
+:root[data-compact-layout] .footer-contact a { position: relative; }
+:root[data-compact-layout] .footer-contact a::before { content: ''; position: absolute; inset: -6px -3px; min-height: 24px; }

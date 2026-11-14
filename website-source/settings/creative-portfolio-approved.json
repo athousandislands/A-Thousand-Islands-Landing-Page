@@ -1,0 +1,161 @@
+{
+  "project": "Creative Portfolio",
+  "copy": {
+    "heading": "Creative Portfolio",
+    "overview1": "We were asked to build a portfolio that could show the range of Joel Meshak’s practice and make the connections between projects easy to see. The work moves from Nairobi streetwear and graphic design to digital art and tools built for live visual experiences.",
+    "overview2": "We organized it into collections so visitors could go from a quick look at the work to the images, videos and experiments behind a project. Motion gives each collection a distinct arrival and helps visitors keep their place as they browse.",
+    "overview3": "We also gave Joel’s visual references a space of their own. The result shows both what he makes and what he looks at when developing an idea.",
+    "mindMap1": "The Mind Map is our take on what brainstorming feels like. References stay in the background until one catches your attention and changes what you notice next.",
+    "mindMap2": "We built the globe in JavaScript and Three.js, using a Fibonacci sphere to distribute 76 image cards evenly. On phones, we chose 55 evenly spaced references and enlarged the cards for readability. We used compressed KTX2 textures and uploaded them to the GPU in batches to spread the work across frames.",
+    "mindMap3": "On desktop, we integrated Pulse through MediaPipe hand tracking. A thumb-and-index pinch engages rotation. Releasing lets you reposition your hand without moving the globe. We scaled the pinch threshold to the size of the hand in frame so it responds consistently at different distances.",
+    "service1": "Concept Development",
+    "service2": "Web Design",
+    "service3": "Interaction Design"
+  },
+  "profiles": {
+    "Phone": {
+      "layout": {
+        "titleScale": 100,
+        "titleHorizontal": 0,
+        "titleVertical": 0,
+        "copyScale": 92,
+        "overviewHorizontal": 0,
+        "overviewVertical": -11,
+        "mindHorizontal": 0,
+        "mindVertical": 0,
+        "servicesScale": 87,
+        "servicesHorizontal": 0,
+        "servicesVertical": 0
+      },
+      "spacing": {
+        "overviewGap": 8,
+        "mindGap": 40,
+        "introGap": 0,
+        "galleryGap": -1,
+        "imageGap": 0,
+        "imageWidth": 100,
+        "mindWidth": 100,
+        "radius": 0
+      },
+      "orb": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "folders": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "projectCards": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "mindMapVideo": {
+        "zoom": 101,
+        "horizontal": 0,
+        "vertical": 0
+      }
+    },
+    "Tablet": {
+      "layout": {
+        "titleScale": 109,
+        "titleHorizontal": 0,
+        "titleVertical": 0,
+        "copyScale": 100,
+        "overviewHorizontal": 0,
+        "overviewVertical": 0,
+        "mindHorizontal": -80,
+        "mindVertical": 0,
+        "servicesScale": 146,
+        "servicesHorizontal": 0,
+        "servicesVertical": 0
+      },
+      "spacing": {
+        "overviewGap": 30,
+        "mindGap": 15,
+        "introGap": 28,
+        "galleryGap": 40,
+        "imageGap": -2,
+        "imageWidth": 100,
+        "mindWidth": 88,
+        "radius": 0
+      },
+      "orb": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "folders": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "projectCards": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "mindMapVideo": {
+        "zoom": 121,
+        "horizontal": 0,
+        "vertical": 0
+      }
+    },
+    "Desktop": {
+      "layout": {
+        "titleScale": 76,
+        "titleHorizontal": 0,
+        "titleVertical": 0,
+        "copyScale": 95,
+        "overviewHorizontal": -8,
+        "overviewVertical": 0,
+        "mindHorizontal": 0,
+        "mindVertical": 0,
+        "servicesScale": 100,
+        "servicesHorizontal": 0,
+        "servicesVertical": 0
+      },
+      "spacing": {
+        "overviewGap": 0,
+        "mindGap": 25,
+        "introGap": 0,
+        "galleryGap": 0,
+        "imageGap": -1,
+        "imageWidth": 100,
+        "mindWidth": 100,
+        "radius": 0
+      },
+      "orb": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "folders": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "projectCards": {
+        "casing": 100,
+        "zoom": 100,
+        "horizontal": 0,
+        "vertical": 0
+      },
+      "mindMapVideo": {
+        "zoom": 113,
+        "horizontal": 0,
+        "vertical": 0
+      }
+    }
+  }
+}

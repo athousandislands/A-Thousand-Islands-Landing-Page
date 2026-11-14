@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="An interactive portfolio for Joel Meshak, bringing together fashion, graphic design, digital art and creative technology." />
+  <title>Creative Portfolio — A Thousand Islands</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/studio-logo.svg" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../project-page.css" />
+</head>
+<body class="project-page">
+  <header class="header">
+        <p class="wordmark"><a href="../#top" aria-label="A Thousand Islands — home">A Thousand Islands</a></p>
+        <div class="controls">
+          <a class="control project-back" href="../#featured-work" aria-label="Back to Featured Work">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Back</span>
+          </a>
+          <button class="sound control" type="button" aria-label="Turn site sound on" aria-pressed="false">
+            <svg viewBox="0 0 28 28" aria-hidden="true">
+              <path class="sound-line" d="M5 14H23" />
+              <g class="sound-bars">
+                <rect x="3" y="11" width="2.5" height="6" rx="1.25" />
+                <rect x="7" y="7" width="2.5" height="14" rx="1.25" />
+                <rect x="11" y="3" width="2.5" height="22" rx="1.25" />
+                <rect x="15" y="6" width="2.5" height="16" rx="1.25" />
+                <rect x="19" y="9" width="2.5" height="10" rx="1.25" />
+                <rect x="23" y="11" width="2.5" height="6" rx="1.25" />
+              </g>
+            </svg>
+          </button>
+          <a class="control talk project-contact" href="mailto:contact@athousandislands.tech" target="_blank" rel="noopener">LET’S TALK</a>
+          <button class="control menu" type="button" aria-label="Menu">
+            <span class="menu-label">MENU</span>
+            <svg class="menu-dots" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+  <main>
+    <section class="project-intro" aria-labelledby="portfolio-title">
+      <h1 class="project-title" id="portfolio-title">Creative Portfolio</h1>
+      <div class="project-copy">
+        <p>We were asked to build a portfolio that could show the range of Joel Meshak’s practice and make the connections between projects easy to see. The work moves from Nairobi streetwear and graphic design to digital art and tools built for live visual experiences.</p>
+        <p>We organized it into collections so visitors could go from a quick look at the work to the images, videos and experiments behind a project. Motion gives each collection a distinct arrival and helps visitors keep their place as they browse.</p>
+        <p>We also gave Joel’s visual references a space of their own. The result shows both what he makes and what he looks at when developing an idea.</p>
+      </div>
+      <aside class="project-services" aria-labelledby="portfolio-services">
+        <h2 id="portfolio-services">Services</h2>
+        <ul>
+          <li>Concept Development</li>
+          <li>Web Design</li>
+          <li>Interaction Design</li>
+        </ul>
+      </aside>
+    </section>
+    <section class="project-gallery" aria-label="Creative Portfolio in detail">
+      <div class="portfolio-stills">
+        <figure class="portfolio-still">
+          <img src="../assets/images/creative portfolio project/orb.png" alt="Glowing orb on the portfolio landing page" width="1080" height="1350" loading="lazy">
+        </figure>
+        <figure class="portfolio-still">
+          <img src="../assets/images/creative portfolio project/folders.png" alt="Three-dimensional project folders" width="1080" height="1350" loading="lazy">
+        </figure>
+        <figure class="portfolio-still">
+          <img src="../assets/images/creative portfolio project/project cards.png" alt="Project cards in the portfolio" width="1080" height="1350" loading="lazy">
+        </figure>
+      </div>
+      <section class="project-copy portfolio-mind-copy" aria-label="Mind Map">
+        <p>The Mind Map is our take on what brainstorming feels like. References stay in the background until one catches your attention and changes what you notice next.</p>
+        <p>We built the globe in JavaScript and Three.js, using a Fibonacci sphere to distribute 76 image cards evenly. On phones, we chose 55 evenly spaced references and enlarged the cards for readability. We used compressed KTX2 textures and uploaded them to the GPU in batches to spread the work across frames.</p>
+        <p>On desktop, we integrated Pulse through MediaPipe hand tracking. A thumb-and-index pinch engages rotation. Releasing lets you reposition your hand without moving the globe. We scaled the pinch threshold to the size of the hand in frame so it responds consistently at different distances.</p>
+      </section>
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame">
+          <video class="project-media" data-clip="mindMap" aria-label="Mind Map demonstration" muted playsinline loop preload="none"
+            src="../assets/images/creative portfolio project/mindmap-demosmall.mp4" poster="../assets/images/creative portfolio project/mindmap-poster.jpg" width="1998" height="1080"></video>
+        </div>
+      </figure>
+    </section>
+  </main>
+  <p class="sound-status" role="status" aria-live="polite"></p>
+  <audio id="background-music" preload="none" loop></audio>
+  <script type="module" src="../project-navigation.js"></script>
+</body>
+</html>

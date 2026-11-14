@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Pulse is an interactive visual system shaped by movement and voice." />
+  <title>Pulse — A Thousand Islands</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/studio-logo.svg" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../project-page.css" />
+</head>
+<body class="project-page">
+  <header class="header">
+        <p class="wordmark"><a href="../#top" aria-label="A Thousand Islands — home">A Thousand Islands</a></p>
+        <div class="controls">
+          <a class="control project-back" href="../#featured-work" aria-label="Back to Featured Work">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Back</span>
+          </a>
+          <button class="sound control" type="button" aria-label="Turn site sound on" aria-pressed="false">
+            <svg viewBox="0 0 28 28" aria-hidden="true">
+              <path class="sound-line" d="M5 14H23" />
+              <g class="sound-bars">
+                <rect x="3" y="11" width="2.5" height="6" rx="1.25" />
+                <rect x="7" y="7" width="2.5" height="14" rx="1.25" />
+                <rect x="11" y="3" width="2.5" height="22" rx="1.25" />
+                <rect x="15" y="6" width="2.5" height="16" rx="1.25" />
+                <rect x="19" y="9" width="2.5" height="10" rx="1.25" />
+                <rect x="23" y="11" width="2.5" height="6" rx="1.25" />
+              </g>
+            </svg>
+          </button>
+          <a class="control talk project-contact" href="mailto:contact@athousandislands.tech" target="_blank" rel="noopener">LET’S TALK</a>
+          <button class="control menu" type="button" aria-label="Menu">
+            <span class="menu-label">MENU</span>
+            <svg class="menu-dots" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+  <main>
+    <section class="project-intro" aria-labelledby="pulse-title">
+      <h1 class="project-title" id="pulse-title">Pulse</h1>
+      <div class="project-copy">
+        <p>Pulse began with a question: how could we make energy feel tangible on a screen? We wanted people to discover it through movement and voice.</p>
+        <p>We made a field of particles the centre of the interface. Using JavaScript, we built a system that translates hand gestures and voice input into changes in how the particles move.</p>
+        <p>The result is an interactive web experience that changes with the person using it. Each gesture or sound gives the particle field a different form.</p>
+      </div>
+      <aside class="project-services" aria-labelledby="pulse-services">
+        <h2 id="pulse-services">Services</h2>
+        <ul>
+          <li>Creative Direction</li>
+          <li>Interface Design</li>
+          <li>Interaction Design</li>
+          <li>Motion Design</li>
+          <li>Generative Visuals</li>
+          <li>Creative Development</li>
+        </ul>
+      </aside>
+    </section>
+    <section class="project-gallery" aria-label="Pulse in motion">
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame">
+          <video class="project-media" data-clip="hero" aria-label="Pulse hero demonstration" muted playsinline loop preload="none"
+          src="../assets/video/pulse videos/hero.mp4"
+          poster="../assets/images/pulse-hero-poster.jpg" width="1836" height="938"></video>
+        </div>
+      </figure>
+      <figure class="project-shot">
+        <div class="project-media-frame">
+          <img class="project-media project-demo" src="../assets/images/pulse demo.png" alt="The Pulse interface and its particle controls" width="2880" height="1554" loading="lazy" />
+        </div>
+      </figure>
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame">
+          <video class="project-media" data-clip="gesture" aria-label="Pulse hand gesture demonstration"
+            muted playsinline loop preload="none" src="../assets/video/pulse videos/hand-gesture-video.mp4"
+            poster="../assets/images/pulse-hand-gesture-video-poster.jpg"
+            width="1836" height="992"></video>
+        </div>
+      </figure>
+    </section>
+  </main>
+  <p class="sound-status" role="status" aria-live="polite"></p>
+  <audio id="background-music" preload="none" loop></audio>
+  <script type="module" src="../project-navigation.js"></script>
+</body>
+</html>

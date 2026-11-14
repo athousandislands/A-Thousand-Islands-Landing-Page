@@ -1,0 +1,26 @@
+.dialkit-root { z-index: 40; }
+.services-dial-help { display: inline-grid; place-items: center; vertical-align: middle; width: 20px; height: 20px; margin-left: 6px; padding: 0; border: 1px solid #9998; border-radius: 50%; background: transparent; font: 11px/1 sans-serif; color: #666; cursor: help; }
+.services-dial-help:focus-visible { outline: 2px solid #506c7a; outline-offset: 2px; }
+.services-dial-help { pointer-events: auto; }
+.services-slider-help { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); z-index: 2; }
+.dialkit-root .dialkit-slider-label { left: 38px; }
+.services-dial-tooltip { position: fixed; z-index: 100; width: min(280px, calc(100vw - 24px)); padding: 12px 14px; border-radius: 10px; background: #202326; color: #f5f6f7; font: 13px/1.5 'Noto Sans', sans-serif; box-shadow: 0 4px 20px #0003; }
+.services-dial-tooltip[hidden] { display: none; }
+.dialkit-panel { max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+@media (pointer: coarse) { .dialkit-root [role='slider'], .dialkit-root button { touch-action: manipulation; } }
+@media (max-width: 640px), (pointer: coarse) { .dialkit-root input { font-size: 16px; } }
+
+/* The hovered panel owns wheel/touch scrolling, including at its boundaries. */
+.dialkit-root .dialkit-panel-inner {
+  max-height: calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8888 transparent;
+}
+.dialkit-root .dialkit-panel-inner::-webkit-scrollbar { display: block; width: 6px; }
+.dialkit-root .dialkit-panel-inner::-webkit-scrollbar-thumb { background: #8888; border-radius: 6px; }
+
+@media (max-width: 640px) {
+  .dialkit-root .dialkit-panel-inner { max-height: 34dvh; }
+}

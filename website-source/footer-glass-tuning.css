@@ -1,0 +1,36 @@
+.footer-dial { --dial-row-height: 42px; }
+.footer-dial .dialkit-panel-inner:not([data-collapsed='true']) { width: 300px!important; max-height: 65dvh!important; }
+.footer-dial .dialkit-panel-inner { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.footer-dial .dialkit-slider[role='slider'] { touch-action: pan-y; }
+.footer-dial .footer-native-hidden { display: none!important; }
+.footer-number-input { position: absolute; z-index: 1; right: 7px; top: 50%; transform: translateY(-50%); box-sizing: border-box; width: 68px; height: 38px; padding: 4px; border: 1px solid #81918a44; border-radius: 5px; background: #ffffffe0; color: #33423c; font: 16px 'Noto Sans', sans-serif; text-align: right; pointer-events: auto; user-select: text; -webkit-user-select: text; }
+.footer-number-input:focus-visible { outline: 2px solid #506c7a; outline-offset: 1px; }
+.footer-dial .dialkit-slider-label { left: 34px; }
+.footer-dial .dialkit-color-label { padding-left: 30px; }
+.footer-dial .dialkit-select-trigger { padding-left: 34px; }
+.footer-dial .dialkit-folder-title-row { gap: 6px; }
+.footer-dial .dialkit-panel-toolbar { display: none; }
+.footer-help-row { position: relative; }
+.footer-action-row { display: flex; align-items: center; gap: 6px; }
+.footer-action-row > .dialkit-button { flex: 1; }
+/* Anchor the enlarged touch target to its own button, not the entire panel. */
+.footer-dial-help { position: relative; display: inline-grid; place-items: center; flex-shrink: 0; padding: 0; width: 22px; height: 22px; border: 1px solid #89949388; border-radius: 50%; background: #fff9; color: #44534e; font: 12px/1 sans-serif; cursor: help; pointer-events: auto; }
+.footer-help-row > .footer-dial-help { position: absolute; z-index: 2; left: 4px; top: 50%; transform: translateY(-50%); }
+.footer-dial-help:focus-visible { outline: 2px solid #506c7a; outline-offset: 2px; }
+.footer-dial-tooltip { position: fixed; z-index: 10001; width: min(280px, calc(100vw - 16px)); padding: 12px; border-radius: 10px; background: #22312d; color: #f5f6f7; font: 12px/1.5 'Noto Sans', sans-serif; box-shadow: 0 4px 20px #0003; }
+.footer-dial-tooltip[hidden] { display: none; }
+.footer-dial-status { position: fixed; z-index: 10002; left: 16px; bottom: max(16px, env(safe-area-inset-bottom)); max-width: min(280px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 10px; background: #22312d; color: #f5f6f7; font: 12px/1.5 'Noto Sans', sans-serif; pointer-events: none; }
+.footer-dial-status:empty { display: none; }
+@media (max-width: 640px) {
+  .footer-dial .dialkit-panel { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); }
+  .footer-dial { --dial-row-height: 44px; --dial-row-gap: 4px; }
+  .footer-dial .dialkit-panel-inner:not([data-collapsed='true']) { width: min(420px, calc(100vw - 16px))!important; max-height: min(62dvh, calc(100dvh - 112px))!important; padding-inline: 12px; }
+  .footer-dial .dialkit-slider-label, .footer-dial .dialkit-slider-value { font-size: 13px; }
+  .footer-dial .dialkit-slider-value { min-width: 44px; min-height: 40px; display: grid; align-items: center; text-align: right; }
+  .footer-dial .dialkit-slider-input { font-size: 16px; }
+  .footer-dial .dialkit-button, .footer-dial .dialkit-select-trigger, .footer-dial .dialkit-folder-header-top { min-height: 40px; }
+}
+@media (pointer: coarse) {
+  .footer-dial { --dial-row-height: 44px; --dial-row-gap: 4px; }
+  .footer-dial-help::after { content: ''; position: absolute; inset: -11px; }
+}

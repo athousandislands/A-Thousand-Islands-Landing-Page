@@ -1,31 +1,37 @@
-# A Thousand Islands redesign
+# A Thousand Islands — website redesign
 
-Environment setup only. Visual direction, layouts, interactions and content await creative direction. The supplied `01_Studio_and_Website_Brief.pdf` is the primary project reference.
+Work in this folder on the **redesign** branch. Production has not been changed. Do not merge to main or publish to production without explicit approval.
 
-This checkout belongs to `athousandislands/A-Thousand-Islands-Landing-Page`. Work on `redesign`; do not merge or deploy to production without explicit approval. The existing root HTML files and media are preserved. Vite serves only `site/`, and builds only that directory into `dist-redesign/`.
+## Where everything is
 
-## Local development
+- **website-source/** — the current website's editable source code. Start with **index.html**, **styles.css**, and **website.js**. Open them in any code editor.
+- **website-source/showreel-player.js** — looping covers, playback, controls and responsive video selection.
+- **website-source/homepage-glass.js** — homepage colour/clock reveal.
+- **website-source/services-discovery.js**, **services-discovery-model.js**, **services.css** — full-page Services material, placement and timed reveals.
+- **website-source/services-discovery-tuning.js** — local DialKit controls for positions, spacing, legibility, colour, movement and transitions.
+- The Discover Our Services title is static on every device; its layout lives in **services.css**.
+- **website-source/text-entrances.js** — heading and copy entrances.
+- **website-source/featured-work.css**, **featured-work.js** — Featured Work layout and entrance; approved baked covers live in **assets/images/featured-work/**.
+- **website-source/glass-carousel.js**, **glass-carousel.css** — horizontal WebGL2 glass slider. Add or replace projects in **carousel-projects.js** (up to sixteen); image URLs and titles are separate. Open **/?tune=carousel#featured-work** for the floating DialKit controls. Phone and desktop settings save separately.
+- **website-source/assets/** — active images, fonts, audio, showreel videos and licences.
+- **design-references/** — current homepage/showreel layout and player references.
+- **MOBILE-NATIVE-GUIDE.md** — the supplied mobile interaction/platform guidance for future site changes.
+- **WEBSITE-NOTES.md** — current decisions, video behaviour and outstanding checks.
+- **build-preview/** — generated website output; recreated by the build command. Edit the source instead.
+- **archive-not-used-by-current-website/** — retired code, historical notes, old site, previews, alternate images and original media. You can move this whole folder elsewhere; the current website does not import it.
+- **node_modules/** — automatically installed development software; no manual edits needed.
+- **package.json**, **package-lock.json**, **vite.config.js**, **vercel.json** — development/build configuration; retained at the root because the tools use them.
 
-Use Node.js 24 (`nvm use` if available), then from this directory:
+## Run the local website
 
-```sh
-npm ci
-npm run dev
-```
+Use Node.js 24, then run `npm ci` once to install dependencies and `npm run dev` to start the preview. Open http://localhost:5174/ . For a phone on the same Wi-Fi, use the network address printed by the server.
 
-Open http://localhost:5174. The server also prints a network URL; open that URL on a phone connected to the same Wi-Fi network. Keep the server running while testing.
+Run `npm run build` to produce **build-preview/**. Run `npm run preview` to view that build at http://localhost:4174/ . No GitHub push or deployment is performed by these commands.
 
-## Build preview
+To tune Services, open http://localhost:5174/?tune=services#services-glass and expand the sliders button at the bottom right. Use **Go to glass surface** or **Replay scroll transition**. Arrival controls coordinate colour and staggered headings. Position controls cover Visual, Direction and Digital Experiences, with separate Phone groups. Controls are saved in this browser; **Copy parameters** exports a configuration to review. The tuning panel is development-only and excluded from production builds.
 
-```sh
-npm run build
-npm run preview
-```
+The existing Vercel configuration builds this source folder into build-preview. A future preview deployment must remain on the redesign branch until approved.
 
-Open http://localhost:4174, or the printed network URL on a phone. This serves the built output separately from the development server. Rebuild and reload after changes.
+Project tuning panels use the documented vendored DialKit in `website-source/vendor/dialkit/`. Include a question-mark explanation for each control and a JSON download. Pulse layout and fade delay are at `/pulse/?tune=pulse`.
 
-## Hosted preview
-
-Vercel configuration is scoped to this branch and builds `site/` into `dist-redesign/`. Use only a Preview deployment of `redesign` on the existing Vercel project. Never use a production deployment, promote a preview, or assign the production domain during redesign work. Preview pages request no indexing.
-
-No application dependencies, motion system, CMS, or design system have been selected. Vite is development tooling only.
+Use one content and layout system across phones and tablets. Adapt column count, type, and spacing to available width and height. Avoid copy or layout overrides for specific device models. Before handing back layout changes, check a short and narrow phone (320×568 and 375×667), a larger phone, an upright and landscape tablet, and desktop. Check that controls clear one another, the copy flows into the next section, and there is no horizontal overflow. Use real hardware to verify browser chrome, safe areas, and touch when available, and identify any checks done in simulated viewports.

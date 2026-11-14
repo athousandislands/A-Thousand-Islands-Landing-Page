@@ -1,0 +1,4 @@
+/* DialKit supplies an inline max-height; keep the controls compact on phones. */
+@media (max-width:640px) {
+  .is-tuning-background .dialkit-panel-inner { max-height:38dvh !important; overscroll-behavior:contain; }
+}

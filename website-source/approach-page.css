@@ -1,0 +1,142 @@
+/* The route owns the canvas, so fading in the content never exposes white. */
+html:has(body.approach-route) {
+  background: linear-gradient(153deg, #e7f0f6, #c2dae4 78%) #c2dae4;
+}
+
+:root[data-phone-layout] .approach-page-header .wordmark {
+  font-size: clamp(17px, 5.5vw, 23px);
+}
+
+.approach-page {
+  --approach-top-fit: var(--approach-top, 0px);
+  --approach-title-gap-fit: var(--approach-title-gap, 0px);
+  --approach-entry: calc(clamp(86px, 14svh, 158px) + env(safe-area-inset-top) + var(--approach-top-fit));
+  --approach-inset: clamp(16px, 4vw, 76px);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  min-height: 100svh;
+  padding: var(--approach-entry) max(var(--approach-inset), env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(var(--approach-inset), env(safe-area-inset-left));
+  gap: calc(clamp(18px, 4.5svh, 54px) + var(--approach-title-gap-fit));
+}
+.approach-page h1, .approach-page h2, .approach-page p { margin: 0; }
+.approach-page h1 {
+  font-size: calc(clamp(32px, min(10.6vw, 7.2svh), 66px) * var(--approach-title-size, 1));
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.055em;
+  margin-block-start: var(--approach-title-y, 0px);
+  margin-inline-start: var(--approach-title-x, 0px);
+}
+.approach-page__steps {
+  display: grid;
+  gap: calc(clamp(16px, 4svh, 46px) + var(--approach-step-gap, 0px));
+}
+.approach-page__step {
+  display: grid;
+  align-content: start;
+  gap: calc(clamp(5px, 1.1svh, 12px) + var(--approach-copy-gap, 0px));
+}
+.approach-page__step h2 {
+  font-size: calc(clamp(17px, min(4.9vw, 3.3svh), 28px) * var(--approach-heading-size, 1));
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -.035em;
+  margin-block-start: var(--approach-heading-y, 0px);
+  margin-inline-start: var(--approach-heading-x, 0px);
+}
+.approach-page__step p {
+  max-width: 56ch;
+  font-size: calc(clamp(15px, min(3.95vw, 2.7svh), 22px) * var(--approach-copy-size, 1));
+  line-height: 1.42;
+  letter-spacing: -.018em;
+  margin-block-start: var(--approach-copy-y, 0px);
+  margin-inline-start: var(--approach-copy-x, 0px);
+}
+
+:root[data-phone-layout] .approach-page {
+    --approach-top-fit: min(var(--approach-top, 0px), max(0px, calc(100svh - 610px)));
+    --approach-title-gap-fit: min(var(--approach-title-gap, 0px), max(0px, calc(100svh - 635px)));
+  }
+
+@media (max-height: 620px) {
+  :root[data-phone-layout] .approach-page {
+    --approach-entry: calc(78px + env(safe-area-inset-top) + var(--approach-top-fit));
+    gap: calc(18px + var(--approach-title-gap-fit));
+  }
+  :root[data-phone-layout] .approach-page__steps { gap: calc(16px + var(--approach-step-gap, 0px)); }
+}
+@media (min-width: 641px) {
+  :root[data-device-profile="tablet"] .approach-page {
+    --approach-entry: calc(clamp(112px, 15svh, 195px) + env(safe-area-inset-top) + var(--approach-top, 0px));
+    --approach-column-gap: max(12px, calc(clamp(15px, 2.7vw, 42px) + var(--approach-column-offset, 0px)));
+    grid-template-columns: minmax(0, 29fr) minmax(0, 71fr);
+    align-content: stretch;
+    gap: var(--approach-column-gap);
+    padding-block-end: max(clamp(36px, 10svh, 125px), env(safe-area-inset-bottom));
+  }
+  :root[data-device-profile="tablet"] .approach-page h1 {
+    align-self: start;
+    font-size: calc(clamp(33px, 5.25vw, 74px) * var(--approach-title-size, 1));
+  }
+  :root[data-device-profile="tablet"] .approach-page__steps {
+    align-content: space-between;
+    gap: max(12px, calc(clamp(22px, 5svh, 72px) + var(--approach-step-gap, 0px)));
+  }
+  :root[data-device-profile="tablet"] .approach-page__step {
+    grid-template-columns: minmax(0, 21fr) minmax(0, 79fr);
+    gap: var(--approach-column-gap);
+  }
+  :root[data-device-profile="tablet"] .approach-page__step h2 {
+    font-size: calc(clamp(20px, 2.85vw, 32px) * var(--approach-heading-size, 1));
+  }
+  :root[data-device-profile="tablet"] .approach-page__step p {
+    max-width: 40ch;
+    font-size: calc(clamp(20px, min(3vw, 3.1svh), 32px) * var(--approach-copy-size, 1));
+    line-height: 1.38;
+    letter-spacing: -.026em;
+  }
+}
+@media (min-width: 1025px) {
+  :root[data-device-profile="desktop"] .approach-page {
+    --approach-entry: calc(clamp(140px, 28svh, 330px) + var(--approach-top, 0px));
+    --approach-column-gap: max(12px, calc(clamp(20px, 3.5vw, 64px) + var(--approach-column-offset, 0px)));
+    grid-template-columns: minmax(0, 29fr) minmax(0, 71fr);
+    gap: var(--approach-column-gap);
+  }
+  :root[data-device-profile="desktop"] .approach-page h1 {
+    align-self: start;
+    font-size: calc(clamp(48px, 5.25vw, 96px) * var(--approach-title-size, 1));
+  }
+  :root[data-device-profile="desktop"] .approach-page__step {
+    grid-template-columns: minmax(0, 21fr) minmax(0, 79fr);
+    gap: var(--approach-column-gap);
+  }
+  :root[data-device-profile="desktop"] .approach-page__step h2 {
+    font-size: calc(clamp(21px, 2vw, 38px) * var(--approach-heading-size, 1));
+  }
+  :root[data-device-profile="desktop"] .approach-page__step p {
+    max-width: 38ch;
+    font-size: calc(clamp(24px, 2vw, 36px) * var(--approach-copy-size, 1));
+    letter-spacing: -.026em;
+    line-height: 1.38;
+  }
+}
+@media (min-width: 1025px) and (prefers-reduced-motion: no-preference) {
+  :root[data-device-profile="desktop"] .approach-page[data-scroll-handoff] { padding-block-end: 0; }
+  :root[data-device-profile="desktop"] .approach-page[data-scroll-handoff] h1 {
+    position: sticky;
+    top: calc(var(--approach-entry) + var(--approach-title-y, 0px));
+  }
+  :root[data-device-profile="desktop"] .approach-page[data-scroll-handoff] .approach-page__steps { gap: 0; }
+  :root[data-device-profile="desktop"] .approach-page[data-scroll-handoff] .approach-page__step {
+    min-height: calc(clamp(170px, 28svh, 340px) + var(--approach-step-gap, 0px));
+    padding-block-end: 24px;
+    opacity: var(--approach-opacity, 1);
+  }
+  :root[data-device-profile="desktop"] .approach-page[data-scroll-handoff] .approach-page__step:last-child {
+    min-height: calc(100svh - var(--approach-entry));
+  }
+}

@@ -1,0 +1,19 @@
+.carousel-dial .dialkit-slider-label { left:33px; }
+.carousel-dial-help { display:inline-grid; place-items:center; width:22px; height:22px; border:1px solid #89949388; border-radius:50%; background:#fff9; color:#44534e; font:12px/1 sans-serif; cursor:help; pointer-events:auto; }
+.carousel-slider-help { position:absolute; z-index:2; left:4px; top:50%; transform:translateY(-50%); }
+.carousel-dial-help:focus-visible { outline:2px solid #506c7a; outline-offset:2px; }
+.carousel-dial-tooltip { position:fixed; z-index:10001; width:min(270px,calc(100vw - 16px)); padding:12px; border-radius:10px; background:#22312d; color:#f5f6f7; font:12px/1.5 'Noto Sans',sans-serif; box-shadow:0 4px 20px #0003; }
+.carousel-dial-tooltip[hidden] { display:none; }
+.carousel-preset-status { position:fixed; z-index:10002; right:16px; bottom:64px; width:min(290px,calc(100vw - 32px)); padding:12px; border-radius:10px; background:#22312d; color:white; font:12px/1.4 'Noto Sans',sans-serif; pointer-events:none; }
+.carousel-preset-status:empty { display:none; }
+@media(max-width:640px) {
+ .carousel-dial { --dial-row-height:28px; --dial-row-gap:4px; }
+ .carousel-dial .dialkit-panel { right:8px; bottom:8px; }
+ .carousel-dial .dialkit-panel-inner:not([data-collapsed='true']) { width:220px!important; max-height:30dvh!important; padding-inline:8px; }
+ .carousel-dial .dialkit-slider-label,.carousel-dial .dialkit-slider-value { font-size:11px; }
+ .carousel-dial .dialkit-folder-title,.carousel-dial .dialkit-action-button { font-size:12px; }
+ .carousel-dial .dialkit-panel-header { margin-bottom:6px; }
+ .carousel-dial .dialkit-slider-value { right:7px; }
+ .carousel-dial-help { width:22px; height:22px; font-size:11px; }
+ .carousel-dial-tooltip { font-size:12px; }
+}

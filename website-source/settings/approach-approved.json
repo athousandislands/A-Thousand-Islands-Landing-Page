@@ -1,0 +1,55 @@
+{
+  "profiles": {
+    "desktop": {
+      "layout": {
+        "top": -12,
+        "titleGap": -2,
+        "stepGap": 17,
+        "copyGap": 2,
+        "columnOffset": 25
+      },
+      "title": {
+        "titleSize": 114,
+        "titleX": -12,
+        "titleY": 0
+      },
+      "headings": {
+        "headingSize": 108,
+        "headingX": 0,
+        "headingY": 6
+      },
+      "paragraphs": {
+        "copySize": 115,
+        "copyX": 34,
+        "copyY": -4
+      },
+      "handoff": {
+        "inactiveOpacity": 0.58
+      }
+    },
+    "phone": {
+      "layout": {
+        "top": 42,
+        "titleGap": 30,
+        "stepGap": 0,
+        "copyGap": 0,
+        "columnOffset": 0
+      },
+      "title": {
+        "titleSize": 115,
+        "titleX": 0,
+        "titleY": 0
+      },
+      "headings": {
+        "headingSize": 100,
+        "headingX": 0,
+        "headingY": 0
+      },
+      "paragraphs": {
+        "copySize": 104,
+        "copyX": 0,
+        "copyY": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Echo is a live visual instrument that turns music and uploaded imagery into a reactive particle field." />
+  <title>Echo — A Thousand Islands</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/studio-logo.svg" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../project-page.css" />
+</head>
+<body class="project-page">
+  <header class="header">
+        <p class="wordmark"><a href="../#top" aria-label="A Thousand Islands — home">A Thousand Islands</a></p>
+        <div class="controls">
+          <a class="control project-back" href="../#featured-work" aria-label="Back to Featured Work">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Back</span>
+          </a>
+          <button class="sound control" type="button" aria-label="Turn site sound on" aria-pressed="false">
+            <svg viewBox="0 0 28 28" aria-hidden="true">
+              <path class="sound-line" d="M5 14H23" />
+              <g class="sound-bars">
+                <rect x="3" y="11" width="2.5" height="6" rx="1.25" />
+                <rect x="7" y="7" width="2.5" height="14" rx="1.25" />
+                <rect x="11" y="3" width="2.5" height="22" rx="1.25" />
+                <rect x="15" y="6" width="2.5" height="16" rx="1.25" />
+                <rect x="19" y="9" width="2.5" height="10" rx="1.25" />
+                <rect x="23" y="11" width="2.5" height="6" rx="1.25" />
+              </g>
+            </svg>
+          </button>
+          <a class="control talk project-contact" href="mailto:contact@athousandislands.tech" target="_blank" rel="noopener">LET’S TALK</a>
+          <button class="control menu" type="button" aria-label="Menu">
+            <span class="menu-label">MENU</span>
+            <svg class="menu-dots" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+  <main>
+    <section class="project-intro" aria-labelledby="echo-title">
+      <h1 class="project-title" id="echo-title">Echo</h1>
+      <div class="project-copy">
+        <p>We built Echo to give live music a visual identity that can change with the set. An operator loads a collection of images and chooses a microphone feed or a music track.</p>
+        <p>Echo turns those images into a field of particles that gathers, breaks apart and forms again as it responds to the sound.</p>
+        <p>We wanted each performance to have room to move differently, while keeping a visual character you could recognise from one set to the next.</p>
+      </div>
+      <aside class="project-services" aria-labelledby="echo-services">
+        <h2 id="echo-services">Services</h2>
+        <ul>
+          <li>Creative Direction</li>
+          <li>Interface Design</li>
+          <li>Interaction Design</li>
+          <li>Motion Design</li>
+          <li>Generative Visuals</li>
+          <li>Creative Development</li>
+        </ul>
+      </aside>
+    </section>
+    <section class="project-gallery" aria-label="Echo in motion">
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame project-inline-player">
+          <video class="project-media" data-clip="hero" aria-label="Echo main visual" playsinline preload="metadata" disablepictureinpicture
+            src="../assets/video/echo videos/echo main visual.mp4" poster="../assets/images/echo-hero-poster.jpg" width="1440" height="1080"></video>
+          <button class="reel-launch" type="button" aria-label="Play Echo main visual">
+            <span class="reel-play"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 6.5c0-1 1-1.6 1.9-1.1l17 9.5c.9.5.9 1.8 0 2.3l-17 9.4c-.9.5-1.9-.1-1.9-1.1Z"/></svg></span>
+          </button>
+          <div class="reel-player controls-visible" hidden role="group" aria-label="Echo video controls">
+            <div class="reel-top-controls">
+              <div class="reel-volume-group">
+                <input class="reel-volume" aria-label="Echo volume" type="range" min="0" max="1" step="0.05" value="1">
+                <button class="reel-mute" type="button" aria-label="Mute Echo"></button>
+              </div>
+            </div>
+            <div class="reel-transport">
+              <button class="reel-pause" type="button" aria-label="Play Echo"></button>
+              <span class="reel-elapsed">00:00</span>
+              <input class="reel-seek" aria-label="Echo video progress" type="range" min="0" max="1" step="0.1" value="0" disabled>
+              <span class="reel-duration">00:00</span>
+            </div>
+            <p class="reel-status" role="status"></p>
+          </div>
+        </div>
+      </figure>
+      <p class="project-detail">An early build looked too sparse at one particle per sampled pixel. We restored the 200,000-particle field and wrote custom GLSL shaders in Three.js to draw several particles from each sampled pixel. We sized the GPU textures to the data in each image and switched texture references during morphs, keeping the density without copying that data between transitions.</p>
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame">
+          <video class="project-media" data-clip="dynamic" aria-label="Echo dynamic forms" muted playsinline loop preload="none"
+            src="../assets/video/echo videos/dynamic-forms.mp4" poster="../assets/images/echo-dynamic-poster.jpg" width="2880" height="1800"></video>
+        </div>
+      </figure>
+      <figure class="project-shot project-shot-video">
+        <div class="project-media-frame">
+          <video class="project-media" data-clip="identity" aria-label="Echo visual identity" muted playsinline loop preload="none"
+            src="../assets/video/echo videos/visual-identity.mp4" poster="../assets/images/echo-identity-poster.jpg" width="1152" height="720"></video>
+        </div>
+      </figure>
+    </section>
+  </main>
+  <p class="sound-status" role="status" aria-live="polite"></p>
+  <audio id="background-music" preload="none" loop></audio>
+  <script type="module" src="../project-navigation.js"></script>
+</body>
+</html>

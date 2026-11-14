@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" preserveAspectRatio="none">
+  <defs>
+    <filter id="cloud" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".009 .012" numOctaves="2" seed="17" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="68" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+  <!-- Unequal, overlapping banks; eye openings are a separate adjustable CSS mask. -->
+  <g fill="white" filter="url(#cloud)">
+    <path d="M310 20C420-40 598 5 632 86S548 156 560 200 441 258 383 190 228 89 310 20Z"/>
+    <path d="M740 12C835 44 829 159 789 197S733 298 698 246 717 175 696 109 698-2 740 12Z"/>
+    <path d="M406 244C464 223 521 286 526 336S489 406 550 441 606 524 547 527 466 457 436 408 346 267 406 244Z"/>
+    <path d="M732 348C823 298 866 406 817 448S764 496 775 546 655 553 643 492 663 465 681 421 689 372 732 348Z"/>
+    <path d="M445 554C503 484 591 581 636 544S696 551 742 602 857 633 869 720H345C360 653 391 619 445 554Z"/>
+    <path d="M33 169C110 70 251 190 233 311S310 439 298 540 131 637 57 545-54 276 33 169Z" opacity=".78"/>
+    <path d="M1034 125C1136 58 1277 125 1280 281V720H1040C1010 633 1081 593 1046 489S955 363 1013 283 976 180 1034 125Z" opacity=".9"/>
+  </g>
+</svg>

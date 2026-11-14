@@ -1,0 +1,46 @@
+.featured-work {
+  position:relative; z-index:2; isolation:isolate;
+  min-height:100svh;
+  scroll-margin-top:clamp(22px,4.1svh,54px);
+  padding: clamp(30px,4vw,50px) max(5vw,40px) max(80px,8svh);
+}
+.featured-work[tabindex="-1"]:focus, #top[tabindex="-1"]:focus, #contact[tabindex="-1"]:focus { outline: none; }
+.featured-introduction { position:relative; z-index:2; line-height:0; }
+.featured-title {
+  position:relative; display:inline-block; margin:0 0 0 -.07em; padding-top:.5em;
+  font-size:8vw; font-weight:500; line-height:.9; letter-spacing:-.02em; overflow:hidden;
+}
+.featured-title-word { display:inline-block; white-space:nowrap; }
+.featured-title-char { display:inline-block; transform-origin:50% 50%; }
+.featured-copy {
+  position:absolute; right:0; bottom:0; width:calc(25% - 1.5vw); margin:0;
+  font-size:clamp(15px,1.1vw,20px); font-weight:400; line-height:1.4;
+}
+.featured-copy-clip { position:relative; display:block; overflow:hidden; }
+.featured-copy-line { display:block; }
+@media (min-aspect-ratio:21/9) and (min-width:641px) {
+  .featured-work { padding-inline:max(6vw,60px); }
+  .featured-title { font-size:5.3vw; }
+  .featured-copy { width:calc(100% / 6 - 2vw / 3); font-size:clamp(15px,.85vw,20px); }
+}
+:root[data-compact-layout]:not([data-phone-layout]) .featured-work { padding-top:50px; padding-inline:max(5vw,40px); }
+:root[data-compact-layout]:not([data-phone-layout]) .featured-introduction { display:grid; grid-template-columns:minmax(0,1fr) clamp(200px,27%,280px); column-gap:24px; }
+:root[data-compact-layout]:not([data-phone-layout]) .featured-title { width:max-content; white-space:nowrap; font-size:min(8vw, 9.2svmin); }
+:root[data-compact-layout]:not([data-phone-layout]) .featured-copy { position:static; width:auto; padding-top:5vw; }
+
+:root[data-phone-layout] .featured-work { margin-top:calc(-1 * clamp(64px,9svh,88px)); }
+:root[data-phone-layout] .featured-work { padding:32px max(25px,env(safe-area-inset-right)) 64px max(25px,env(safe-area-inset-left)); }
+:root[data-phone-layout] .featured-title { display:block; font-size:15svmin; }
+:root[data-phone-layout] .featured-title-word { display:block; }
+:root[data-phone-layout] .featured-copy { position:relative; font-size:clamp(16px,2.5vw,20px); width:100%; margin:3em 0; }
+
+@media (max-width:480px) { .featured-copy { font-size:clamp(15px,4vw,18px); } }
+@media (max-width:400px) {
+  .featured-work { padding:32px max(15px,env(safe-area-inset-right)) 56px max(15px,env(safe-area-inset-left)); }
+}
+:root:is([data-phone-layout], [data-device-profile="tablet"]) .featured-work { min-height: 0; padding-bottom: 28px; }
+/* Compact upright layouts end at their content rather than reserving a full
+   screen. Leave a short pause after the carousel hint before Contact fades in. */
+@media (max-width:640px), (min-width:641px) and (max-width:1180px) and (orientation:portrait) {
+  .featured-work { min-height: 0; padding-bottom: 28px; }
+}
