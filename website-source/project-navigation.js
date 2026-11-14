@@ -219,6 +219,9 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
       }
       showPage(page, url, pop ? positions.get(currentEntry) : undefined, sliding || handheldHandoff);
       if (fromMenu) menu.dismiss();
+      // Closing the menu releases overflow locking. Measure and reset scrolling
+      // against the unlocked destination, rather than the outgoing page's height.
+      if (fromMenu) alignPage(url, pop ? positions.get(currentEntry) : undefined);
       if (fromMenu && url.hash === '#featured-work') page.lifecycle.frameWork?.();
       const destination = fromMenu && document.getElementById(url.hash.slice(1));
       const focus = destination || page.root.querySelector(slideFrom ? '.project-title' : 'main');
@@ -233,6 +236,7 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
       // Keep the opaque cover through layout and the destination's first paint.
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (revision !== navigation) return;
+      alignPage(url, pop ? positions.get(currentEntry) : undefined);
       cover.style.opacity = '1';
       leaving?.cancel();
       if (!reduceMotion.matches) {

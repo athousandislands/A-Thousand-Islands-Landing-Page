@@ -74,7 +74,7 @@ export function initScrolling() {
 
   function scrollTo(target, immediate) {
     if (scrolling) {
-      if (immediate && scrolling.isScrolling && !document.hidden) {
+      if (immediate && !document.hidden) {
         // An anchor or restored history position takes over any wheel momentum.
         scrolling.stop();
         scrolling.start();

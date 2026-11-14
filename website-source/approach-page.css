@@ -1,7 +1,9 @@
 /* The route owns the canvas, so fading in the content never exposes white. */
 html:has(body.approach-route) {
   background: linear-gradient(153deg, #e7f0f6, #c2dae4 78%) #c2dae4;
+  background-attachment: fixed;
 }
+body.approach-route { min-height:100dvh; background:transparent; }
 
 :root[data-phone-layout] .approach-page-header .wordmark {
   font-size: clamp(17px, 5.5vw, 23px);

@@ -38,6 +38,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
+body > div:has(> main) { overflow-anchor:none; }
 .page-transition-cover::backdrop { background: transparent; }
 button { font: inherit; color: inherit; }
 .opening {
