@@ -183,8 +183,11 @@ function fadeTo(value, seconds) {
 }
 function reflectToggle() {
   if (!toggle) return;
-  toggle.setAttribute('aria-pressed', String(playing));
-  toggle.setAttribute('aria-label', playing ? 'Turn site sound off' : 'Turn site sound on');
+  for (const button of document.querySelectorAll('.sound')) {
+    button.setAttribute('aria-pressed', String(requested));
+    button.setAttribute('aria-label', requested ? 'Turn site sound off' : 'Turn site sound on');
+    button.setAttribute('aria-busy', String(requested && !playing));
+  }
 }
 
 function reflectPlayback(next) {
@@ -197,6 +200,7 @@ function reflectPlayback(next) {
 async function setSound(next) {
   const current = ++revision;
   requested = next;
+  reflectToggle();
   clearTimeout(pauseTimer);
   status.textContent = '';
   if (!requested) {

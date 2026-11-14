@@ -287,6 +287,7 @@ async function start() {
   const url = new URL(location.href);
   const path = pagePath(url);
   if (!path) return;
+  history.scrollRestoration = 'manual';
   scrolling = initScrolling();
   menu = initSiteMenu({ scrollTo: scrolling.jumpTo, navigate: href => navigate(new URL(href), { fromMenu: true }) });
   const page = collectPage(document, url);
@@ -295,7 +296,7 @@ async function start() {
   const { mountPage } = await routes[path]();
   page.mount = mountPage;
   pages.set(path, Promise.resolve(page));
-  const initialPosition = !url.hash ? scrollY : undefined;
+  const initialPosition = !url.hash ? 0 : undefined;
   showPage(page, url, initialPosition);
   preserveReadingPositionOnRotation(scrolling.jumpTo, () => currentPage?.root);
   rememberEntry({ replace: true, nextCount: history.state?.atiNextCount });
