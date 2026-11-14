@@ -21,3 +21,5 @@
 
 .carousel-hint { color:#37474e; animation-duration:5.5s; }
 @keyframes carousel-hint-pulse { 0%,100% { opacity:.65; } 50% { opacity:1; } }
+/* Override both the pulse and caption animations as soon as exploration starts. */
+.glass-carousel[data-engaged='true'] .carousel-footer { opacity:0; pointer-events:none; transition:opacity 650ms ease; }

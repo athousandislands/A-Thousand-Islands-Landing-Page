@@ -287,3 +287,8 @@ video.project-media[data-clip="gesture"] { transform: translate(var(--gesture-x,
 .portfolio-still img, [data-project="creative-portfolio"] video.project-media {
   transform: translate(var(--portfolio-media-x, 0px), var(--portfolio-media-y, 0px)) scale(var(--portfolio-media-scale, 1));
 }
+:root[data-device-profile='phone'] .project-page .header .project-back {
+  position:relative; left:auto; transform:none; width:40px; height:40px; padding:0; display:grid; place-items:center; flex-shrink:0;
+}
+:root[data-device-profile='phone'] .project-page .header .project-back svg { width:var(--mobile-icon-size,24px); height:var(--mobile-icon-size,24px); }
+:root[data-device-profile='phone'] .project-page .header .controls { gap:var(--mobile-icon-gap,8px); }

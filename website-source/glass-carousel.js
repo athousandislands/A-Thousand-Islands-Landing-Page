@@ -95,7 +95,7 @@ export function initGlassCarousel() {
  function engage(){introRemaining=0;root.dataset.engaged='true';try{sessionStorage.setItem(engagementKey,'true');}catch{}}
  try{if(sessionStorage.getItem(engagementKey)==='true')engage();}catch{}
  root.querySelector('.carousel-list').replaceChildren(...projects.map(project=>{const li=document.createElement('li');li.textContent=project.title;return li;}));
- const selectionHint=()=>deviceProfile()==='desktop'?'Drag to browse · Click to explore':'Swipe to browse · Tap to explore';
+ const selectionHint=()=>deviceProfile()==='desktop'?'Click or swipe to explore':'Touch or swipe to explore';
  hint.textContent=selectionHint();hint.style.opacity='0';
  const hintMotion=createCarouselCaption(hint,{exitDuration:950,exitShift:0});
  const hintFooter=root.querySelector('.carousel-footer');
