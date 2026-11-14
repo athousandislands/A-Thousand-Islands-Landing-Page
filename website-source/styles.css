@@ -460,7 +460,7 @@ input, textarea, select { font-size:16px; }
 .hero[data-tilt-prompt='true'] > :not(.tilt-hint) { filter:blur(3px); }
 .tilt-hint { position:absolute; z-index:6; top:73%; left:0; right:0; color:#fff; text-align:center; pointer-events:none; }
 .tilt-hint[hidden] { display:none; }
-.tilt-hint p { margin:0; font:13px/1.4 'Noto Sans',sans-serif; animation:tilt-hint-pulse 2s ease-in-out 2 both; }
+.tilt-hint p { margin:0; font:15px/1.4 'Noto Sans',sans-serif; animation:tilt-hint-pulse 2s ease-in-out 2 both; }
 @keyframes tilt-hint-pulse { 0%,100% {opacity:0;} 35%,65% {opacity:1;} }
 
 :root[data-phone-layout] .hero .glass-colour { filter:saturate(1.18); --pool-spread:1.18; }
