@@ -1,5 +1,5 @@
 import { playBloomSound } from './interaction-sound.js';
-import { isHandheld } from './device-profile.js';
+import { isHandheld, deviceProfile } from './device-profile.js';
 
 const audio = document.querySelector('#background-music');
 let headerTuningMounted = false;
@@ -292,7 +292,7 @@ export function bindPageSound(root) {
   }
   toggle = root.querySelector('.sound');
   status = root.querySelector('.sound-status');
-  toggle.innerHTML = '<span class="site-speaker" aria-hidden="true"></span>';
+  if (deviceProfile() === 'phone') toggle.innerHTML = '<span class="site-speaker" aria-hidden="true"></span>';
   reflectToggle();
   for (const button of root.querySelectorAll('.control, .reel-launch')) {
     if (boundControls.has(button)) continue;

@@ -517,7 +517,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display:none; }
 :root[data-device-profile='phone'] .header .site-speaker, :root[data-device-profile='phone'] .header .menu-dots { width:var(--mobile-icon-size,24px); height:var(--mobile-icon-size,24px); }
 :root[data-device-profile='phone'] .header :is(.sound,.menu) { display:grid; place-items:center; }
 :root:is([data-device-profile='phone'],[data-device-profile='tablet']) .reel-player .reel-back { width:auto!important; }
-.site-menu .header .sound,
 :root[data-device-profile='phone'] .site-menu .header .sound {
   color: #363d3f;
   background: color-mix(in srgb, var(--menu-blue, #e6eef0) 65%, white);
