@@ -217,12 +217,17 @@ export function initServicesDiscovery({ playSound = () => {} } = {}) {
   stage.addEventListener('click', event => {
     if (gesture && !gesture.valid) { gesture = null; return; }
     if (window.getSelection?.()?.toString()) { gesture = null; return; }
-    const selected = event.target.closest('.discovery-heading');
+    const selected = event.target.closest('.discovery-heading') || event.target.closest('.discovery-service')?.querySelector('.discovery-heading');
     let x = event.clientX, y = event.clientY;
     if (event.detail === 0 && selected) {
       const bounds = selected.getBoundingClientRect(); x = bounds.left + bounds.width / 2; y = bounds.top + bounds.height / 2;
     }
-    const index = selected ? states.findIndex(state => state.button === selected) : nearestService(x, y, states.map(state => state.button.getBoundingClientRect()));
+    const bounds = states.map(state => state.button.getBoundingClientRect());
+    const candidates = bounds.map((box, index) => (
+      x >= box.left - 20 && x <= box.right + 20 && y >= box.top - 20 && y <= box.bottom + 20 ? index : -1
+    )).filter(index => index >= 0);
+    const index = selected ? states.findIndex(state => state.button === selected)
+      : candidates.length ? candidates[nearestService(x, y, candidates.map(index => bounds[index]))] : -1;
     if (index < 0) return;
     if (states[index].headingProgress < .98) return;
     states[index].root.dataset.engaged = 'true';
