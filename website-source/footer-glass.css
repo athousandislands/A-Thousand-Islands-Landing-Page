@@ -42,7 +42,7 @@ html[data-footer-active] { overscroll-behavior-x: contain; }
 }
 .footer-glass[data-show-cue] .footer-glass__prompt { opacity: 1; }
 .footer-glass:not([data-show-cue]) .footer-glass__prompt :is(.tap-rings, .tap-finger) { animation-play-state: paused; }
-.footer-glass__prompt .glass-prompt-copy { display:block; color:#fff; font:13px/1.4 'Noto Sans',sans-serif; animation:footer-prompt-pulse 5s ease-in-out infinite; }
+:root:is([data-device-profile='phone'],[data-device-profile='tablet']) .footer-glass__prompt .glass-prompt-copy { display:block; color:#fff; font:13px/1.4 'Noto Sans',sans-serif; animation:footer-prompt-pulse 5s ease-in-out infinite; }
 @keyframes footer-prompt-pulse { 0%,100% { opacity:.6; } 50% { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .footer-glass__prompt .glass-prompt-copy { animation:none; } }
 :root[data-phone-layout] .footer-glass__prompt .tap-cue { width: 31.2px; height: auto; }
