@@ -38,19 +38,12 @@ export function initFooterGlass({ jumpTo = target => target.scrollIntoView({ blo
   const profiles = Object.fromEntries(['desktop', 'tablet', 'phone'].map(name => [name, footerDefaults(name)]));
   const values = () => profiles[device];
   const interactive = () => inView && root.isConnected && !document.hidden && !reelOpen;
-  const cueKey = 'ati-footer-cue';
   let cueStatus = 'initial', cueOnVisit = false, engagedOnVisit = false;
-  try { cueStatus = sessionStorage.getItem(cueKey) || cueStatus; } catch {}
-
-  function rememberCue(status) {
-    cueStatus = status;
-    try { sessionStorage.setItem(cueKey, status); } catch {}
-  }
   function updateCue(active) {
     const canShow = active && visible && !engagedOnVisit;
     if (canShow && !cueOnVisit && cueStatus !== 'done') {
       cueOnVisit = true;
-      if (cueStatus === 'return') rememberCue('done');
+      if (cueStatus === 'return') cueStatus = 'done';
     }
     root.toggleAttribute('data-show-cue', canShow && cueOnVisit);
   }
@@ -103,7 +96,7 @@ export function initFooterGlass({ jumpTo = target => target.scrollIntoView({ blo
     scheduleThaw();
     if (!engagedOnVisit) {
       engagedOnVisit = true;
-      if (cueStatus === 'initial') rememberCue('return');
+      if (cueStatus === 'initial') cueStatus = 'return';
       updateCue(true);
     }
   }

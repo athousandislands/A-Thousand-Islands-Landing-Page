@@ -32,7 +32,7 @@ export function mountPage(root, scrolling) {
   const stopFooterContact = initFooterGlass({ jumpTo: scrolling.jumpTo });
 
 
-  initShowreel();
+  const showreel = initShowreel();
   root.addEventListener('carousel:select', event => {
     if (event.detail.project.href) fadeToPage(event.detail.project.href);
   });
@@ -52,5 +52,10 @@ export function mountPage(root, scrolling) {
   for(const event of ['wheel','touchstart','pointermove'])window.addEventListener(event,showProgress,{passive:true});
   window.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key))showProgress();});
   window.addEventListener('resize',queueProgress);queueProgress();showProgress();
-  return { deactivate: stopFooterContact, frameWork: () => carousel?.landOn('Pulse') };
+  return {
+    activate: () => showreel.activate(),
+    dismissOverlay: showreel.dismiss,
+    deactivate() { showreel.deactivate(); stopFooterContact?.(); },
+    frameWork: () => carousel?.landOn('Pulse'),
+  };
 }

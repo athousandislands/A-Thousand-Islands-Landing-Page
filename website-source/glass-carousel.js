@@ -1,4 +1,3 @@
-import './glass-carousel.css';
 import { createCarouselCaption } from './carousel-caption.js';
 import { CAROUSEL_PROJECTS } from './carousel-projects.js';
 import { carouselDefaults, carouselMetrics, gestureAxis, hitCarouselCard, neighbors, springStep, wrap } from './glass-carousel-model.js';
@@ -86,14 +85,10 @@ export function initGlassCarousel() {
  const projects=CAROUSEL_PROJECTS.slice(0,16); if(!projects.length)return;
  const stage=root.querySelector('.carousel-stage'), canvas=stage.querySelector('canvas');
  const labels=root.querySelector('.carousel-labels'), fallback=root.querySelector('.carousel-fallback');
- const still=fallback.firstElementChild, live=root.querySelector('[aria-live]');
+ const live=root.querySelector('[aria-live]');
  const hint=root.querySelector('.carousel-hint');
- // The revised selection prompt has its own session dismissal. Earlier
- // carousel exploration/tuning must not suppress a prompt never seen.
- const engagementKey='ati-carousel-selection-hint-v3';
  let introRemaining=2;
- function engage(){introRemaining=0;root.dataset.engaged='true';try{sessionStorage.setItem(engagementKey,'true');}catch{}}
- try{if(sessionStorage.getItem(engagementKey)==='true')engage();}catch{}
+ function engage(){introRemaining=0;root.dataset.engaged='true';}
  root.querySelector('.carousel-list').replaceChildren(...projects.map(project=>{const li=document.createElement('li');li.textContent=project.title;return li;}));
  const selectionHint=()=>deviceProfile()==='desktop'?'Click or swipe to explore':'Touch or swipe to explore';
  hint.textContent=selectionHint();hint.style.opacity='0';
@@ -105,7 +100,6 @@ export function initGlassCarousel() {
  const carouselProfile=()=>deviceProfile()==='phone'&&!isPhoneLayout()?'desktop':deviceProfile();
  let device=carouselProfile(),config=carouselDefaults(device), current=0,target=0,velocity=0,frame=0,last=0,timer=0;
  let visible=false,focused=false,drag=null,paused=false,active=0,framedArrival=false;
- let pendingSelection = null;
  let w=1,h=1,cardW=1,cardH=1,step=1,gl,program,locations={},atlas;
  const artwork=projects.map(p=>({...p.framing}));
  const colors=new Float32Array(48),imageFlags=new Float32Array(16),pillFlags=new Float32Array(16);
@@ -116,63 +110,69 @@ export function initGlassCarousel() {
  function compile(type,source){const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(shader));return shader;}
  function setup(){
   if(new URLSearchParams(location.search).get('carouselFallback')==='1')return;
-  gl=canvas.getContext('webgl2',{alpha:true,antialias:false,premultipliedAlpha:true,powerPreference:'low-power'});if(!gl)return;
   try {
+   gl=canvas.getContext('webgl2',{alpha:true,antialias:false,premultipliedAlpha:true,powerPreference:'low-power'});if(!gl)return;
    program=gl.createProgram();const shaders=[compile(gl.VERTEX_SHADER,vertex),compile(gl.FRAGMENT_SHADER,fragment)];shaders.forEach(s=>gl.attachShader(program,s));gl.linkProgram(program);shaders.forEach(s=>gl.deleteShader(s));if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));gl.useProgram(program);
    const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
    const attribute=gl.getAttribLocation(program,'aPosition');gl.enableVertexAttribArray(attribute);gl.vertexAttribPointer(attribute,2,gl.FLOAT,false,0,0);
    for(const name of ['Size','Position','Width','Height','Step','Glass','Rim','Fold','Stretch','Curve','Fade','Dispersion','Reach','ImageScale','Rise','Depth','TravelArc','Velocity','MotionPull','Count','Colors[0]','Images[0]','PillImages[0]','Artwork[0]','Aspect','Atlas'])locations[name]=gl.getUniformLocation(program,'u'+name);
    atlas=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlas);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-   root.dataset.renderer='webgl2';fallback.hidden=true;
+   root.dataset.renderer='webgl2';
   } catch(error){console.warn('Carousel using still fallback:',error.message);gl=null;}
  }
  function updateColors(){projects.forEach((p,i)=>{const hex=p.color.replace('#','');colors.set([0,2,4].map(j=>parseInt(hex.slice(j,j+2),16)/255),i*3);});}
  let imageLoading=false;
  async function loadImages(){
-  if(imageLoading||!projects.some(p=>p.image))return;imageLoading=true;
-  if(!gl){
-   for(const project of projects){if(project.image){const img=new Image();img.src=project.image;}}
-   return;
-  }
+  if(!gl||imageLoading||!projects.some(p=>p.image))return;imageLoading=true;
   const cellH=Math.min(720,Math.floor(gl.getParameter(gl.MAX_TEXTURE_SIZE)/projects.length)),cellW=Math.round(cellH*1.5);
   const sheet=document.createElement('canvas');sheet.width=cellW;sheet.height=cellH*projects.length;const ctx=sheet.getContext('2d');
+  if(!ctx){useFallback();return;}
   await Promise.all(projects.map(async(p,i)=>{if(!p.image)return;try{const img=new Image();img.crossOrigin='anonymous';img.src=p.image;await img.decode();const crop=p.crop||{x:0,y:0,width:img.width,height:img.height};const scale=Math.max(cellW/crop.width,cellH/crop.height);ctx.save();ctx.beginPath();ctx.rect(0,i*cellH,cellW,cellH);ctx.clip();ctx.drawImage(img,crop.x,crop.y,crop.width,crop.height,(cellW-crop.width*scale)/2,i*cellH+(cellH-crop.height*scale)/2,crop.width*scale,crop.height*scale);ctx.restore();imageFlags[i]=1;}catch{imageFlags[i]=0;}}));
-  if(!gl)return;try{gl.bindTexture(gl.TEXTURE_2D,atlas);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sheet);root.dataset.loadedImages=String(imageFlags.reduce((sum,value)=>sum+value,0));render();}catch{imageFlags.fill(0);}
+  if(!gl)return;
+  if(projects.some((project,index)=>project.image&&!imageFlags[index])){useFallback();return;}
+  try{gl.bindTexture(gl.TEXTURE_2D,atlas);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sheet);if(gl.getError()!==gl.NO_ERROR){useFallback();return;}root.dataset.loadedImages=String(imageFlags.reduce((sum,value)=>sum+value,0));render();}catch{useFallback();}
  }
  function layout(){
+  if(!gl)return;
   w=stage.clientWidth;
   const measure=device==='phone'?Math.min(w,innerHeight):w;
   const metrics=carouselMetrics(measure,config);cardW=metrics.cardW;cardH=metrics.cardH;step=metrics.step;
   const size=`${metrics.height}px`;if(stage.style.height!==size)stage.style.height=size;
   h=stage.clientHeight;
   const ratio=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
-  stage.style.setProperty('--fallback-width',`${cardW}px`);
-  stage.style.setProperty('--fallback-aspect',config.aspect);
-  if(gl)gl.viewport(0,0,canvas.width,canvas.height);render();
+  gl.viewport(0,0,canvas.width,canvas.height);render();
  }
  function announce(){const index=wrap(Math.round(current),projects.length);if(index!==active){active=index;live.textContent=`${projects[index].title}, ${index+1} of ${projects.length}`;}root.dataset.active=String(index);}
  function render(){
+  if(!gl)return;
   announce();
   const settled=!drag&&Math.abs(current-target)<.001&&Math.abs(velocity)<.01;
   hintMotion.update(selectionHint(),{ready:introRemaining===0&&settled&&root.dataset.engaged!=='true',visible:visible&&!document.hidden,reduced:reduced.matches});
-  const promptTop=h*(gl?.465:.5)+cardH*.5+Math.min(16,h*.035)+38;
+  const promptTop=h*.465+cardH*.5+Math.min(16,h*.035)+38;
   hintFooter.style.top=`${promptTop}px`;
   // Compact stages can end before the prompt. Reserve its real height so the
   // following Contact material never paints over it on phones or tablets.
   root.style.paddingBottom=`${Math.max(0,promptTop+36-h)}px`;
-  label.style.top=`${h*(gl?.465:.5)+cardH*.5+Math.min(16,h*.035)}px`;
+  label.style.top=`${h*.465+cardH*.5+Math.min(16,h*.035)}px`;
   caption.update(projects[active].title,{
    ready:reduced.matches||!gl||(!drag&&Math.abs(current-Math.round(current))<.12&&Math.abs(velocity)<.8),
    visible:visible&&!document.hidden,reduced:reduced.matches,
   });
-  if(!gl){const project=projects[active];still.style.setProperty('--card-color',project.color);still.style.backgroundImage=project.image?`url("${project.image}")`:'';still.textContent='';return;}
   gl.useProgram(program);gl.uniform1f(locations.Aspect,config.aspect);gl.uniform4fv(locations['Artwork[0]'],new Float32Array(artwork.flatMap((a,i)=>[a.size,a.x/100,a.y/100,projects[i].fullBleed?2:projects[i].edgeBlend?1:0])));gl.uniform2f(locations.Size,w,h);gl.uniform1f(locations.Position,current);gl.uniform1f(locations.Velocity,reduced.matches?0:velocity);gl.uniform1f(locations.Width,cardW);gl.uniform1f(locations.Height,cardH);gl.uniform1f(locations.Step,step);gl.uniform1f(locations.Glass,reduced.matches?0:config.glass);gl.uniform1f(locations.Rim,config.rim);for(const name of ['fold','stretch','curve','fade','dispersion','reach','imageScale','rise','depth','travelArc','motionPull'])gl.uniform1f(locations[name[0].toUpperCase()+name.slice(1)],reduced.matches&&['depth','travelArc','motionPull'].includes(name)?0:config[name]);gl.uniform1i(locations.Count,projects.length);gl.uniform3fv(locations['Colors[0]'],colors);gl.uniform1fv(locations['Images[0]'],imageFlags);gl.uniform1fv(locations['PillImages[0]'],pillFlags);gl.uniform1i(locations.Atlas,0);gl.drawArrays(gl.TRIANGLES,0,6);
   root.dataset.position=current.toFixed(3);root.dataset.neighbors=neighbors(current,projects.length).join(',');root.dataset.pillWidth=cardW.toFixed(1);
  }
- function runnable(){return visible&&!document.hidden&&!drag;}
- function animate(now){frame=0;if(!runnable())return;const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;[current,velocity]=springStep(current,velocity,target,dt,config.spring);if(Math.abs(current-target)<.0001&&Math.abs(velocity)<.001){current=target;velocity=0;last=0;render();completeSelection();return;}render();request();}
+ function runnable(){return gl&&visible&&!document.hidden&&!drag;}
+ function animate(now){frame=0;if(!runnable())return;const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;[current,velocity]=springStep(current,velocity,target,dt,config.spring);if(Math.abs(current-target)<.0001&&Math.abs(velocity)<.001){current=target;velocity=0;last=0;render();return;}render();request();}
  function request(){if(!frame&&runnable()){frame=requestAnimationFrame(animate);}}
  function halt(){cancelAnimationFrame(frame);frame=0;last=0;}
+ function useFallback(){
+  const hadFocus=stage.contains(document.activeElement);
+  halt();clearTimeout(timer);clearTimeout(wheelTimer);
+  gl=null;visible=false;drag=null;
+  root.style.removeProperty('padding-bottom');
+  root.dataset.renderer='fallback';
+  if(hadFocus)fallback.querySelectorAll('a')[active]?.focus({preventScroll:true});
+ }
  function schedule(delay=config.seconds*1000){
   clearTimeout(timer);
   if(!visible||document.hidden||paused||drag||focused)return;
@@ -185,7 +185,7 @@ export function initGlassCarousel() {
   },delay);
  }
  function navigate(amount){engage();manual();target=Math.round(target)+amount;if(reduced.matches||!gl){current=target;velocity=0;render();}else request();schedule(3000);}
- function manual(){cancelSelection();live.setAttribute('aria-live','polite');clearTimeout(timer);}
+ function manual(){live.setAttribute('aria-live','polite');clearTimeout(timer);clearTimeout(wheelTimer);}
  let wheelTimer;
  function cardAt(event){const rect=stage.getBoundingClientRect();return hitCarouselCard(event.clientX-rect.left,event.clientY-rect.top,{w,h,cardW,cardH,step,current,velocity,config,reduced:reduced.matches,fallback:!gl});}
  function dispatchSelection(index) {
@@ -194,20 +194,10 @@ export function initGlassCarousel() {
    detail: { index, project: projects[index] },
   }));
  }
- function completeSelection() {
-  if (pendingSelection === null) return;
-  const index = pendingSelection;
-  cancelSelection();
-  dispatchSelection(index);
- }
- function cancelSelection() {
-  pendingSelection = null;
- }
  function select(item) {
   if (item === null) return;
   engage();
   manual();
-  clearTimeout(wheelTimer);
   target = item;
   velocity = 0;
   const index = wrap(item, projects.length);
@@ -217,13 +207,9 @@ export function initGlassCarousel() {
   if (reduced.matches || !gl || Math.abs(current - target) < .001) {
    current = target;
    render();
-   dispatchSelection(index);
-  } else {
-   // Linked cards open only after animate() draws the settled center position.
-   if (projects[index].href) pendingSelection = index;
-   else dispatchSelection(index);
-   request();
-  }
+  } else request();
+  // Start navigation on activation. The card can move during the page fade.
+  dispatchSelection(index);
  }
  function beginDrag(event){
   focused=false;manual();halt();
@@ -282,7 +268,11 @@ export function initGlassCarousel() {
  stage.addEventListener('wheel',event=>{if(event.ctrlKey)return;if(Math.abs(event.deltaX)<=Math.abs(event.deltaY)&&!event.shiftKey)return;event.preventDefault();event.stopPropagation();engage();manual();target+=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*.003*config.wheel;if(!reduced.matches&&gl)request();clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>{target=Math.round(target);if(reduced.matches||!gl){current=target;render();}else request();schedule(3000);},140);},{passive:false});
  stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End',' ','Enter'].includes(event.key))return;event.preventDefault();focused=true;if(event.key==='Enter')select(Math.round(current));else if(event.key===' ')togglePlayback();else if(event.key==='Home'||event.key==='End'){target=0;navigate(event.key==='End'?projects.length-1:0);}else navigate(event.key==='ArrowRight'?1:-1);});
  root.addEventListener('focusin',()=>{focused=stage.matches(':focus-visible');if(focused)clearTimeout(timer);});root.addEventListener('focusout',event=>{if(root.contains(event.relatedTarget))return;focused=false;schedule(3000);});
- function togglePlayback(){cancelSelection();paused=!paused;if(!paused)focused=false;root.dataset.paused=String(paused);if(paused){target=current;velocity=0;halt();}live.setAttribute('aria-live','polite');live.textContent=paused?'Automatic playback paused':'Automatic playback resumed';schedule(3000);}
+ function togglePlayback(){paused=!paused;if(!paused)focused=false;root.dataset.paused=String(paused);if(paused){target=current;velocity=0;halt();}live.setAttribute('aria-live','polite');live.textContent=paused?'Automatic playback paused':'Automatic playback resumed';schedule(3000);}
+ canvas.addEventListener('webglcontextlost',useFallback);
+ setup();
+ if(!gl){useFallback();return;}
+ updateColors();layout();
  new ResizeObserver(layout).observe(stage);
  const artworkObserver=new IntersectionObserver(entries=>{
   if(!entries[0].isIntersecting)return;
@@ -291,13 +281,11 @@ export function initGlassCarousel() {
  artworkObserver.observe(stage);
  new IntersectionObserver(entries=>{const before=visible;visible=entries[0].isIntersecting&&entries[0].intersectionRatio>=.25;
   if(visible){if(!before){introRemaining=framedArrival?0:2;framedArrival=false;focused=false;current=target=Math.round(current);velocity=0;root.dataset.introMoves='0';}loadImages();render();request();if(!before)schedule(900);}
-  else{cancelSelection();halt();clearTimeout(timer);caption.hide();hintMotion.hide();}
+  else{halt();clearTimeout(timer);caption.hide();hintMotion.hide();}
   root.dataset.visible=String(visible);
  },{threshold:[0,.25]}).observe(stage);
- document.addEventListener('visibilitychange',()=>{halt();clearTimeout(timer);if(document.hidden){cancelSelection();caption.hide();}else{render();request();schedule(3000);}});
- reduced.addEventListener('change',()=>{root.dataset.motion=reduced.matches?'reduced':'full';halt();current=target=Math.round(pendingSelection===null?current:target);velocity=0;render();completeSelection();schedule();});
- canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();halt();clearTimeout(timer);gl=null;fallback.hidden=false;root.dataset.renderer='fallback';if(pendingSelection!==null){current=target;velocity=0;}render();completeSelection();});
- setup();updateColors();layout();if(!gl)root.dataset.renderer='fallback';
+ document.addEventListener('visibilitychange',()=>{halt();clearTimeout(timer);if(document.hidden){caption.hide();}else{render();request();schedule(3000);}});
+ reduced.addEventListener('change',()=>{root.dataset.motion=reduced.matches?'reduced':'full';halt();current=target=Math.round(current);velocity=0;render();schedule();});
  const api={
   landOn(title) {
    const index=projects.findIndex(project=>project.title===title);

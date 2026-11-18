@@ -70,7 +70,7 @@ export function mountPage(root) {
     control.pending = attempt;
     const showPlay = () => {
       if (control.pending === attempt && active && visibleVideos.has(video) && !document.hidden) {
-        control.button.hidden = !isHandheld();
+        control.button.hidden = false;
       }
     };
     if (requested) {
@@ -108,7 +108,7 @@ export function mountPage(root) {
     clipControls.set(video, control);
 
     function reflectPlaying(playing) {
-      button.hidden = !isHandheld();
+      button.hidden = playing && !isHandheld() && !control.manualOnly;
       button.dataset.playing = String(playing);
       button.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${video.getAttribute('aria-label')}`);
     }
@@ -123,6 +123,7 @@ export function mountPage(root) {
       playClip(video, true);
     });
     video.addEventListener('playing', () => {
+      if (!active || !visibleVideos.has(video) || document.hidden) { video.pause(); return; }
       control.started = true;
       video.dataset.playback = 'playing';
       delete video.dataset.playbackError;
@@ -148,10 +149,11 @@ export function mountPage(root) {
     const control = clipControls.get(video);
     if (!active || !visibleVideos.has(video) || document.hidden) {
       if (control.started && isHandheld()) control.manualOnly = true;
+      control.pending = undefined;
       control.loader.stop();
       video.pause();
     } else if (video.paused && (reducedMotion.matches || control.manualOnly)) {
-      control.button.hidden = !isHandheld();
+      control.button.hidden = false;
     } else if (video.paused) playClip(video);
   }
 

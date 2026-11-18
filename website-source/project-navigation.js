@@ -6,6 +6,7 @@ import { preserveReadingPositionOnRotation } from './rotation-scroll.js';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const fadeDuration = 300;
+const pageLoadTimeout = 8_000;
 const easing = 'cubic-bezier(.42,0,.25,1)';
 const intoProjectFade = { duration: 420, easing: 'cubic-bezier(.37,0,.63,1)' };
 const outOfProjectFade = { duration: 360, easing };
@@ -29,6 +30,8 @@ let entryId = 0;
 let navigation = 0;
 let pending = false;
 let fade;
+let transitionCover;
+let navigationRecovery;
 let projectSlide;
 let handoffInput;
 let scrolling;
@@ -62,16 +65,20 @@ function collectPage(source, url) {
   };
 }
 
-function loadStyles(source, url) {
+function loadStyles(source, url, signal) {
   return Promise.all([...source.querySelectorAll('link[rel="stylesheet"]')].map(link => {
     const href = new URL(link.getAttribute('href'), url).href;
     if ([...document.styleSheets].some(sheet => sheet.href === href)) return;
     return new Promise((resolve, reject) => {
+      if (signal.aborted) { reject(signal.reason); return; }
       const stylesheet = document.createElement('link');
       stylesheet.rel = 'stylesheet';
       stylesheet.href = href;
-      stylesheet.onload = resolve;
-      stylesheet.onerror = () => { stylesheet.remove(); reject(new Error('Page stylesheet failed to load')); };
+      const fail = error => { signal.removeEventListener('abort', abort); stylesheet.remove(); reject(error); };
+      const abort = () => fail(signal.reason);
+      signal.addEventListener('abort', abort, { once: true });
+      stylesheet.onload = () => { signal.removeEventListener('abort', abort); resolve(); };
+      stylesheet.onerror = () => fail(new Error('Page stylesheet failed to load'));
       document.head.append(stylesheet);
     });
   }));
@@ -80,23 +87,68 @@ function loadStyles(source, url) {
 function loadPage(path) {
   if (!pages.has(path)) {
     const url = new URL(path, location.origin);
-    const loading = Promise.all([fetch(url), routes[path]()]).then(async ([response, module]) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    let timer;
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const error = new Error('Page took too long to load');
+        controller.abort(error);
+        reject(error);
+      }, pageLoadTimeout);
+    });
+    const page = Promise.all([fetch(url, { signal }), routes[path]()]).then(async ([response, module]) => {
       if (!response.ok) throw new Error('Page failed to load');
       const source = new DOMParser().parseFromString(await response.text(), 'text/html');
       if (!source.querySelector('main')) throw new Error('Page content missing');
-      await loadStyles(source, url);
+      await loadStyles(source, url, signal);
       return { ...collectPage(source, url), mount: module.mountPage };
-    }).catch(error => {
+    });
+    const loading = Promise.race([page, deadline]).catch(error => {
+      controller.abort(error);
       pages.delete(path);
       throw error;
-    });
+    }).finally(() => clearTimeout(timer));
     pages.set(path, loading);
   }
   return pages.get(path);
 }
 
+function dismissTransitionCover(cover = transitionCover) {
+  if (!cover) return;
+  cover.close();
+  cover.remove();
+  if (transitionCover === cover) transitionCover = undefined;
+}
+
+function clearNavigationRecovery() {
+  navigationRecovery?.remove();
+  navigationRecovery = undefined;
+}
+
+function offerNavigationRetry(url) {
+  const recovery = document.createElement('aside');
+  recovery.className = 'page-navigation-recovery';
+  recovery.setAttribute('aria-label', 'Page loading');
+  recovery.innerHTML = `
+    <p role="status">The page couldn’t load.</p>
+    <button type="button" class="control">Try again</button>
+    <button type="button" class="control">Stay here</button>
+  `;
+  const [retry, stay] = recovery.querySelectorAll('button');
+  const previousFocus = document.activeElement;
+  retry.addEventListener('click', () => location.assign(url));
+  stay.addEventListener('click', () => {
+    clearNavigationRecovery();
+    previousFocus?.focus({ preventScroll: true });
+  });
+  document.body.append(recovery);
+  navigationRecovery = recovery;
+  retry.focus({ preventScroll: true });
+}
+
 function rememberEntry({ replace = false, url = location.href, nextCount = projectOrder.length - 1 } = {}) {
-  currentEntry = ++entryId;
+  currentEntry = `${performance.timeOrigin}:${++entryId}`;
   history[replace ? 'replaceState' : 'pushState']({ ...history.state, atiEntry: currentEntry, atiNextCount: nextCount }, '', url);
 }
 
@@ -168,11 +220,16 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
   if (!pop && pending) return;
   if (!pop && menu.tuning && !url.searchParams.has('tune')) url.searchParams.set('tune', menu.tuning);
   const revision = ++navigation;
+  clearNavigationRecovery();
   fade?.cancel();
+  dismissTransitionCover();
   projectSlide?.skipTransition();
   handoffInput?.release();
   handoffInput = undefined;
-  if (pop) menu.dismiss();
+  if (pop) {
+    menu.dismiss();
+    currentPage?.lifecycle.dismissOverlay?.();
+  }
   if (path === currentPage.path && !fromMenu) {
     pending = false;
     if (!pop) rememberEntry({ url });
@@ -189,21 +246,33 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
   const exit = path !== '/' ? intoProjectFade : outOfProjectFade;
   // A top-layer cover also occludes an open menu and fixed page backgrounds.
   const cover = !sliding ? document.createElement('dialog') : null;
-  if (cover) {
-    cover.className = 'page-transition-cover';
-    cover.setAttribute('aria-label', 'Changing page');
-    cover.style.cssText = 'position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f5f6f7;opacity:0;pointer-events:auto;';
-    document.body.append(cover);
-    cover.showModal();
-    cover.addEventListener('cancel', event => event.preventDefault());
-  }
-  const leaving = !sliding && document.body.animate && !reduceMotion.matches
-    ? cover.animate([{ opacity: 0 }, { opacity: 1 }], { ...exit, fill: 'forwards' })
-    : null;
-  if (cover && !leaving) cover.style.opacity = '1';
-  fade = leaving;
+  let leaving;
   let committed = pop;
   try {
+    if (cover) {
+      cover.className = 'page-transition-cover';
+      cover.setAttribute('aria-label', 'Changing page');
+      cover.style.cssText = 'position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f5f6f7;opacity:0;pointer-events:auto;';
+      document.body.append(cover);
+      transitionCover = cover;
+      cover.showModal();
+      cover.addEventListener('cancel', event => {
+        event.preventDefault();
+        if (committed || revision !== navigation) return;
+        navigation++;
+        pending = false;
+        leaving?.cancel();
+        dismissTransitionCover(cover);
+        input?.release();
+        if (handoffInput === input) handoffInput = undefined;
+      });
+    }
+    leaving = cover && document.body.animate && !reduceMotion.matches
+      ? cover.animate([{ opacity: 0 }, { opacity: 1 }], { ...exit, fill: 'forwards' })
+      : null;
+    if (cover && !leaving) cover.style.opacity = '1';
+    fade = leaving;
+    let focus;
     const [page] = await Promise.all([
       loadPage(path),
       leaving?.finished.catch(() => {}),
@@ -224,9 +293,8 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
       if (fromMenu) alignPage(url, pop ? positions.get(currentEntry) : undefined);
       if (fromMenu && url.hash === '#featured-work') page.lifecycle.frameWork?.();
       const destination = fromMenu && document.getElementById(url.hash.slice(1));
-      const focus = destination || page.root.querySelector(slideFrom ? '.project-title' : 'main');
-      focus.tabIndex = -1;
-      focus.focus({ preventScroll: true });
+      focus = destination || page.root.querySelector(slideFrom ? '.project-title' : 'main');
+      if (focus) focus.tabIndex = -1;
       positions.set(currentEntry, scrollY);
       return true;
     };
@@ -245,6 +313,10 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
         await reveal.finished.catch(() => {});
       }
     }
+    if (revision === navigation) {
+      if (cover) dismissTransitionCover(cover);
+      focus?.focus({ preventScroll: true });
+    }
     if (input && !handheldHandoff && revision === navigation) {
       await input.quiet();
       if (revision === navigation) {
@@ -254,12 +326,15 @@ async function navigate(url, { pop = false, slideFrom, fromMenu = false } = {}) 
     }
   } catch {
     if (revision === navigation) {
+      dismissTransitionCover(cover);
       if (committed) location.reload();
-      else location.assign(url);
+      else {
+        if (fromMenu) menu.dismiss(true);
+        offerNavigationRetry(url);
+      }
     }
   } finally {
-    cover?.close();
-    cover?.remove();
+    if (cover) dismissTransitionCover(cover);
     leaving?.cancel();
     if (input && handoffInput === input) {
       input.release();
@@ -288,6 +363,12 @@ async function start() {
   const path = pagePath(url);
   if (!path) return;
   history.scrollRestoration = 'manual';
+  const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  if (reloaded && path === '/' && url.hash) {
+    // Keep intentional section links on entry, and reset the homepage on reload.
+    url.hash = '';
+    history.replaceState(history.state, '', url);
+  }
   scrolling = initScrolling();
   menu = initSiteMenu({ scrollTo: scrolling.jumpTo, navigate: href => navigate(new URL(href), { fromMenu: true }) });
   const page = collectPage(document, url);
@@ -297,9 +378,9 @@ async function start() {
   page.mount = mountPage;
   pages.set(path, Promise.resolve(page));
   const initialPosition = !url.hash ? 0 : undefined;
+  rememberEntry({ replace: true, nextCount: reloaded ? undefined : history.state?.atiNextCount });
   showPage(page, url, initialPosition);
   preserveReadingPositionOnRotation(scrolling.jumpTo, () => currentPage?.root);
-  rememberEntry({ replace: true, nextCount: history.state?.atiNextCount });
   positions.set(currentEntry, scrollY);
   history.scrollRestoration = 'manual';
   if (url.searchParams.get('tune') === 'menu') page.root.querySelector('.header .menu')?.click();
@@ -309,6 +390,9 @@ async function start() {
     navigation++;
     pending = false;
     fade?.cancel();
+    dismissTransitionCover();
+    clearNavigationRecovery();
+    currentPage?.lifecycle.dismissOverlay?.({ resumeCover: false });
     menu.dismiss();
     projectSlide?.skipTransition();
     handoffInput?.release();

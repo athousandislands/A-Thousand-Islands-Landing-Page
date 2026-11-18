@@ -83,7 +83,7 @@ test('actual pointer handlers ignore vertical drift, retain horizontal ownership
  const handlers={},captures=new Set(),selected=[];
  const stage={dataset:{},addEventListener:(type,fn)=>handlers[type]=fn,hasPointerCapture:id=>captures.has(id),setPointerCapture:id=>captures.add(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0})};
  const config=carouselDefaults('phone'),metrics=carouselMetrics(390,config);
- const sandbox={stage,window:{addEventListener:(type,fn)=>handlers[type]=fn},root:{dataset:{},dispatchEvent:event=>selected.push(event.detail.index)},CustomEvent:class{constructor(type,options){Object.assign(this,options);}},live:{textContent:''},projects:[{title:'Echo'},{title:'Pulse'},{title:'Third'}],current:0,target:0,velocity:0,w:390,h:metrics.height,...metrics,config,reduced:{matches:false},gl:true,drag:null,focused:false,hover:false,autoMotion:false,timer:0,gestureAxis,hitCarouselCard,wrap,engage(){},manual(){},halt(){},render(){},request(){},schedule(){},clearTimeout(){}};
+ const sandbox={stage,window:{addEventListener:(type,fn)=>handlers[type]=fn},root:{dataset:{},dispatchEvent:event=>selected.push(event.detail.project.href)},CustomEvent:class{constructor(type,options){Object.assign(this,options);}},live:{textContent:''},projects:[{title:'Echo',href:'/echo/'},{title:'Pulse',href:'/pulse/'},{title:'Creative Portfolio',href:'/creative-portfolio/'}],current:0,target:0,velocity:0,w:390,h:metrics.height,...metrics,config,reduced:{matches:false},gl:true,drag:null,focused:false,hover:false,autoMotion:false,timer:0,gestureAxis,hitCarouselCard,wrap,engage(){},manual(){},halt(){},render(){},request(){},schedule(){},clearTimeout(){}};
  vm.createContext(sandbox);
  const source=readFileSync(new URL('../website-source/glass-carousel.js',import.meta.url),'utf8');
  sandbox.wheelTimer = 0;
@@ -94,8 +94,8 @@ test('actual pointer handlers ignore vertical drift, retain horizontal ownership
  handlers.pointermove(event(201,middle+50));handlers.pointerup(event(201,middle+50));assert.equal(sandbox.current,0);assert.deepEqual(selected,[]);
  handlers.pointerdown(event(195,middle));handlers.pointermove(event(150,middle+3));const moved=sandbox.current;assert.ok(moved>0);assert.equal(captures.size,1);
  handlers.pointermove(event(140,middle+100));assert.ok(sandbox.current>moved);handlers.pointerup(event(140,middle+100));assert.deepEqual(selected,[]);
- sandbox.current=0;handlers.pointerdown(event(385,middle));handlers.pointerup(event(385,middle));assert.equal(sandbox.target,1);assert.deepEqual(selected,[1]);
- handlers.pointerdown(event(195,middle));handlers.pointercancel(event(195,middle));assert.deepEqual(selected,[1]);
+ sandbox.current=0;handlers.pointerdown(event(385,middle));handlers.pointerup(event(385,middle));assert.equal(sandbox.target,1);assert.equal(sandbox.current,0);assert.deepEqual(selected,['/pulse/']);
+ handlers.pointerdown(event(195,middle));handlers.pointercancel(event(195,middle));assert.deepEqual(selected,['/pulse/']);
 
  // Real touch streams can survive Safari cancelling their matching pointer events.
  sandbox.window.TouchEvent = class {};
@@ -113,7 +113,10 @@ test('actual pointer handlers ignore vertical drift, retain horizontal ownership
  handlers.touchend(touch(156,middle+2));
  assert.equal(prevented,1);
  assert.equal(sandbox.target,1);
- assert.deepEqual(selected,[1]);
+ assert.deepEqual(selected,['/pulse/']);
+ handlers.touchstart(touch(5,middle));handlers.touchend(touch(5,middle));
+ assert.equal(sandbox.target,-1);
+ assert.deepEqual(selected,['/pulse/','/creative-portfolio/']);
 });
 
 test('arrival scheduling advances twice even under the pointer, then settles until a fresh visit',()=>{

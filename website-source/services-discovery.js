@@ -19,9 +19,7 @@ export function initServicesDiscovery({ playSound = () => {} } = {}) {
   let targetSurface = 0, surfaceAlpha = 0;
   let portrait = false;
   let arrivalAt = null;
-  const engagementKey = 'studio-services-engaged';
   let engaged = false;
-  try { engaged = sessionStorage.getItem(engagementKey) === 'true'; } catch { /* Storage is optional. */ }
   const states = [...scene.querySelectorAll('.discovery-service')].map(root => ({
     root, button: root.querySelector('.discovery-heading'), list: root.querySelector('.discovery-list'),
     clear: root.querySelector('.discovery-word-clear'), soft: root.querySelector('.discovery-word-soft'),
@@ -38,7 +36,6 @@ export function initServicesDiscovery({ playSound = () => {} } = {}) {
     label.className = 'service-reveal-label';
     label.textContent = matchMedia('(any-pointer: coarse)').matches ? 'Touch to reveal' : 'Click to reveal';
     state.cue.append(label);
-    try { if (sessionStorage.getItem(engagementKey + '-' + states.indexOf(state)) === 'true') state.root.dataset.engaged = 'true'; } catch {}
     state.root.append(state.cue);
   });
 
@@ -232,7 +229,6 @@ export function initServicesDiscovery({ playSound = () => {} } = {}) {
     if (states[index].headingProgress < .98) return;
     states[index].root.dataset.engaged = 'true';
     engaged = true; scene.dataset.engaged = 'true';
-    try { sessionStorage.setItem(engagementKey, 'true'); sessionStorage.setItem(engagementKey + '-' + index, 'true'); } catch { /* Current visit still remembers. */ }
     rippleAt(x, y);
     reveal(states[index]); playSound(); gesture = null;
   });

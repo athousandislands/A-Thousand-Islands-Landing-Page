@@ -27,7 +27,9 @@ void main() {
 `;
 
 export function createFooterCutout(root, video, canvas, config, { useVideoClock = false } = {}) {
-  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false });
+  let gl;
+  try { gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false }); }
+  catch { /* The original video remains available without a WebGL context. */ }
   if (!gl) { root.dataset.keying = 'original'; return null; }
   let active = false, lost = false, frame = 0, fallback = 0, lastTime = -1, ready = false;
   root.dataset.cutoutActive = 'false';
@@ -64,6 +66,7 @@ export function createFooterCutout(root, video, canvas, config, { useVideoClock 
     gl.uniform1f(removal, current.backgroundRemoval); gl.uniform1f(softness, current.backgroundSoftness);
     try {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      if (gl.getError() !== gl.NO_ERROR) { useOriginal(); return; }
     } catch {
       useOriginal();
       return;

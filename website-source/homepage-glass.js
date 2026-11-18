@@ -47,27 +47,18 @@ export function initGlassScene({ playSound }) {
   let animations=[],active=false,frame=0,started=0,lastFrame=0,bloomAnimation,portrait=false;
   let gesture=null, inView=true;
   const pickBloom=createBloomPicker();
-  const deadlineKey='studio-reveal-deadline';
-  const engagementKey='studio-glass-engaged';
-  // The cue has no timeout. Only an accepted gesture (or its saved state) hides it.
-  let engaged=false;
-  try{engaged=sessionStorage.getItem(engagementKey)==='true';}catch{/* Storage is optional. */}
-  hero.dataset.engaged=String(engaged);
-  if(engaged)trigger.classList.add('has-interacted');
+  // Keep the reveal and its cue within this document's lifetime.
+  hero.dataset.engaged='false';
   function rememberEngagement(){
     hero.dataset.engaged='true';trigger.classList.add('has-interacted');
-    try{sessionStorage.setItem(engagementKey,'true');}catch{/* The current page still remembers. */}
   }
-  const readDeadline=()=>{try{return Number(sessionStorage.getItem(deadlineKey))||0;}catch{return 0;}};
-  const savedDeadline=readDeadline();
-  const saveDeadline=value=>{try{if(value)sessionStorage.setItem(deadlineKey,String(value));else sessionStorage.removeItem(deadlineKey);}catch{/* Storage can be unavailable in private contexts. */}};
 
   function updateIntroduction() {
     for(const node of clock.querySelectorAll('[data-field]'))node.textContent=STUDIO_INTRODUCTION[node.dataset.field];
     readable.textContent='We are an artist-led design studio.';
   }
   function reset() {
-    active=false;saveDeadline(0);cancelAnimationFrame(frame);
+    active=false;cancelAnimationFrame(frame);
     animations.forEach(animation=>animation.cancel());animations=[];
     bloomAnimation?.cancel();bloomAnimation=null;
     clock.hidden=readable.hidden=true;
@@ -121,11 +112,11 @@ export function initGlassScene({ playSound }) {
   syncLayout();
   const layout=new ResizeObserver(syncLayout);
   layout.observe(hero);
-  function start(elapsed=0) {
+  function start() {
     if(active)return;
     active=true;
     trigger.setAttribute('aria-pressed','true');trigger.setAttribute('aria-label','Studio introduction is showing');
-    hero.dataset.scene='revealing';clock.hidden=readable.hidden=false;updateIntroduction();if(!elapsed)playSound();
+    hero.dataset.scene='revealing';clock.hidden=readable.hidden=false;updateIntroduction();playSound();
     const frost=document.querySelector('.glass-frost');
     if(frost&&!reduced.matches)animate(frost,[
       {maskPosition:'20% 30%',opacity:.26},
@@ -141,9 +132,7 @@ export function initGlassScene({ playSound }) {
       animate(item,[{opacity:0,offset:0},{opacity:0,offset:700*index/REVEAL_DURATION},{opacity:1,offset:(3600+700*index)/REVEAL_DURATION},{opacity:1,offset:1-3600/REVEAL_DURATION},{opacity:0,offset:1}]);
       if(reduced.matches)item.querySelector('.clock-clear').style.maskImage='none';
     }
-    started=performance.now()-elapsed;lastFrame=performance.now();
-    saveDeadline(Date.now()+REVEAL_DURATION-elapsed);
-    for(const animation of animations)animation.currentTime=elapsed;
+    started=lastFrame=performance.now();
     if(!reduced.matches&&inView)frame=requestAnimationFrame(tick);
     envelope.finished.then(reset,()=>{});
   }
@@ -193,7 +182,12 @@ export function initGlassScene({ playSound }) {
     cancelAnimationFrame(frame);bloomAnimation?.cancel();
     for(const item of items)item.querySelector('.clock-clear').style.maskImage=reduced.matches?'none':'';
     if(active&&!reduced.matches&&inView&&!document.hidden)frame=requestAnimationFrame(tick);
-  });reset();
-  const remaining=savedDeadline-Date.now();
-  if(remaining>0&&remaining<=REVEAL_DURATION)start(REVEAL_DURATION-remaining);
+  });
+  window.addEventListener('pagehide',()=>{
+    gesture=null;
+    hero.dataset.engaged='false';
+    trigger.classList.remove('has-interacted');
+    reset();
+  });
+  reset();
 }

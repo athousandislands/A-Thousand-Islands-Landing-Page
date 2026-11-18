@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./services.css" />
     <link rel="stylesheet" href="./featured-work.css" />
+    <link rel="stylesheet" href="./glass-carousel.css" />
     <link rel="license" href="./assets/licenses/procedural-sounds.txt" />
   </head>
   <body>
@@ -149,7 +150,6 @@
           <div class="carousel-stage" tabindex="0" role="group" aria-label="Project slider" aria-describedby="carousel-instructions" aria-keyshortcuts="ArrowLeft ArrowRight Space Enter">
             <canvas aria-hidden="true"></canvas>
             <div class="carousel-labels" aria-hidden="true"></div>
-            <div class="carousel-fallback"><div class="carousel-fallback-card">Echo</div></div>
           </div>
           <p class="carousel-accessible" id="carousel-instructions">Swipe sideways or drag to explore; swipe vertically to scroll the page. Use the left and right arrow keys to change project. Tap an image or press Enter to select. Press Space to pause or resume the two-step introduction.</p>
           <ol class="carousel-list carousel-accessible"><li>Echo</li><li>Pulse</li><li>Creative Portfolio</li></ol>
@@ -157,6 +157,11 @@
           <div class="carousel-footer">
             <p class="carousel-hint" id="carousel-hint">Swipe to select</p>
           </div>
+          <ul class="carousel-fallback" aria-label="Featured projects">
+            <li><a href="./echo/"><img src="./assets/images/echo-fallback.png" alt="" loading="lazy" decoding="async"><span>Echo <span aria-hidden="true">→</span></span></a></li>
+            <li><a href="./pulse/"><img src="./assets/images/pulse-fallback.png" alt="" loading="lazy" decoding="async"><span>Pulse <span aria-hidden="true">→</span></span></a></li>
+            <li><a href="./creative-portfolio/"><img src="./assets/images/portfolio-fallback.png" alt="" loading="lazy" decoding="async"><span>Creative Portfolio <span aria-hidden="true">→</span></span></a></li>
+          </ul>
         </section>
       </section>
     </main>

@@ -40,6 +40,21 @@
 body { margin: 0; }
 body > div:has(> main) { overflow-anchor:none; }
 .page-transition-cover::backdrop { background: transparent; }
+.page-navigation-recovery {
+  position: fixed;
+  z-index: 20;
+  inset-inline: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 16px;
+  border-radius: 20px;
+  background: #f5f6f7;
+  box-shadow: 0 8px 32px #252f3b33;
+}
+.page-navigation-recovery p { margin: 0 0 12px; }
+.page-navigation-recovery button { cursor: pointer; }
 button { font: inherit; color: inherit; }
 .opening {
   height: 100vh;

@@ -228,15 +228,11 @@ async function setSound(next) {
   }
 }
 // Touch devices, including tablets with a connected mouse, opt in with the button.
-// Desktop can still unlock sound on the first click unless the user muted it.
-const mutedPreference = 'ati-site-sound-muted';
+// Desktop can unlock sound on the first click in the current visit.
 let firstInteraction = true;
-try { firstInteraction = sessionStorage.getItem(mutedPreference) !== 'true'; } catch {}
 function toggleSound() {
   firstInteraction = false;
-  const next = !requested;
-  try { sessionStorage.setItem(mutedPreference, String(!next)); } catch {}
-  setSound(next);
+  setSound(!requested);
 }
 document.addEventListener('click', event => {
   if (!firstInteraction || !event.isTrusted || event.target.closest?.('.sound, .project-inline-player, .project-back')) return;
@@ -365,8 +361,14 @@ function resumeIfActive() {
 }
 window.addEventListener('blur', pauseForInactivity);
 window.addEventListener('focus', resumeIfActive);
-window.addEventListener('pagehide', pauseForInactivity);
-window.addEventListener('pageshow', resumeIfActive);
+window.addEventListener('pagehide', () => {
+  // A browser back-cache restore may reuse this entire audio graph.
+  requested = false;
+  firstInteraction = true;
+  pauseForInactivity();
+  if (audio.readyState) audio.currentTime = 0;
+  if (heartbeat.readyState) heartbeat.currentTime = 0;
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) pauseForInactivity();
   else resumeIfActive();
