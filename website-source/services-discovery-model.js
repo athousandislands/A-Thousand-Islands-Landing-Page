@@ -24,11 +24,11 @@ export const DISCOVERY_DEFAULTS = {
     "orange": "#fb9a5d",
     "terracotta": "#ef8759",
     "rose": "#db9bbb",
-    "saturation": 1.1
+    "saturation": 1.27
   },
   "flow": {
     "period": 16,
-    "movement": 1,
+    "movement": 1.05,
     "spread": 1.05
   },
   "focus": {

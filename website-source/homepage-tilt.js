@@ -5,7 +5,10 @@ export function initHomepageTilt(hero, trigger, colour, {services=false}={}) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   if (!matchMedia('(any-pointer: coarse)').matches || !window.DeviceOrientationEvent || reduced.matches) return { flowAmount: () => 1 };
   // Apply the accepted material settings before permission; sensors remain opt-in.
-  colour.style.filter=`saturate(${settings.saturation})`;
+  const saturation = () => services
+    ? `saturate(calc(${settings.saturation} * var(--colour-saturation) / 1.2))`
+    : `saturate(${settings.saturation})`;
+  colour.style.filter = saturation();
   hero.style.setProperty('--tilt-texture',settings.texture);
   hero.style.setProperty('--tilt-grain',settings.grain);
   let offered=false, enabled=false, visible=true, frame=0, previous=0, baseline=null;
@@ -26,7 +29,7 @@ export function initHomepageTilt(hero, trigger, colour, {services=false}={}) {
     colour.style.setProperty('--tilt-y', `${y*.4}%`);
     colour.style.setProperty('--tilt-angle', `${x*.65-y*.3}deg`);
     colour.style.scale=String(settings.field);
-    colour.style.filter=`saturate(${settings.saturation})`;
+    colour.style.filter = saturation();
     hero.style.setProperty('--tilt-texture',settings.texture);
     hero.style.setProperty('--tilt-grain',settings.grain);
     colour.style.translate=`${x}% ${y}%`;

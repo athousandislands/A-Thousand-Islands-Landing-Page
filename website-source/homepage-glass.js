@@ -79,7 +79,7 @@ export function initGlassScene({ playSound }) {
     const progress=Math.min(1,(now-started)/REVEAL_DURATION);
     const [x,y]=flowAt(progress);
     const [cx,cy,angle,scale]=flowAt(progress,portrait);
-    const flow=tilt.flowAmount();
+    const flow=tilt.flowAmount() * 1.1;
     colour.style.transform=`translate(${cx*flow}% ,${cy*flow}%) rotate(${angle*flow}deg) scale(${1+(scale-1)*flow})`;
     items.forEach((item,index)=>{
       const phase=index*1.9;
