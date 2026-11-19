@@ -1,3 +1,4 @@
 .ticker-tuning .dialkit-panel-inner:not([data-collapsed='true']) {
   max-height: min(540px, 62dvh);
 }
+.ticker-tuning .dialkit-panel-toolbar { display:none; }

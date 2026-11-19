@@ -21,10 +21,9 @@ export function mountPage(root, scrolling) {
     scrolling.scrollToTop();
   });
 
-  const ticker=initSectionMotion({jumpTo:scrolling.jumpTo});
-  if (location.hostname.match(/^(localhost|127\.0\.0\.1|\[::1\])$/) &&
-      new URLSearchParams(location.search).get('tune') === 'ticker') {
-    import('./ticker-tuning.js').then(({ mountTickerTuning }) => mountTickerTuning(ticker, root));
+  const titleMotion = initSectionMotion(root.querySelector('.approach'), { jumpTo: scrolling.jumpTo });
+  if (import.meta.env.DEV && new URLSearchParams(location.search).get('tune') === 'ticker') {
+    import('./ticker-tuning.js').then(({ mountTickerTuning }) => mountTickerTuning(titleMotion, root));
   }
   initServicesDiscovery({ playSound: playGlassBloom });
   initFeaturedWork({ jumpTo: scrolling.jumpTo });
@@ -53,9 +52,16 @@ export function mountPage(root, scrolling) {
   window.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key))showProgress();});
   window.addEventListener('resize',queueProgress);queueProgress();showProgress();
   return {
-    activate: () => showreel.activate(),
+    activate() {
+      titleMotion.activate();
+      showreel.activate();
+    },
     dismissOverlay: showreel.dismiss,
-    deactivate() { showreel.deactivate(); stopFooterContact?.(); },
+    deactivate() {
+      titleMotion.deactivate();
+      showreel.deactivate();
+      stopFooterContact?.();
+    },
     frameWork: () => carousel?.landOn('Pulse'),
   };
 }

@@ -1,0 +1,9 @@
+.dial-help-button { flex:0 0 28px; display:inline-grid; place-items:center; width:28px; height:28px; padding:0; border:1px solid #89949388; border-radius:50%; background:#fff; color:#344d48; font:14px/1 'Noto Sans',sans-serif; cursor:help; touch-action:manipulation; }
+.dial-help-button:focus-visible { outline:2px solid #506c7a; outline-offset:2px; }
+.dial-with-help { display:flex; align-items:center; gap:6px; }
+.dial-with-help > .dialkit-button { flex:1; }
+.dial-with-slider-help { position:relative; }
+.dial-with-slider-help > .dial-help-button { position:absolute; left:3px; top:50%; transform:translateY(-50%); z-index:2; }
+.dial-with-slider-help .dialkit-slider-label { left:37px; }
+.dial-help-tip { position:fixed; z-index:10050; width:min(290px,calc(100vw - 16px)); padding:12px; border-radius:10px; background:#22312d; color:#fff; font:14px/1.5 'Noto Sans',sans-serif; box-shadow:0 4px 20px #0003; }
+.dial-help-tip[hidden] { display:none; }

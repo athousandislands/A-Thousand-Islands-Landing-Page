@@ -291,12 +291,17 @@ button { font: inherit; color: inherit; }
   :root:not([data-phone-layout]) .approach { gap: 48px; }
 }
 
-/* Three rolling copies, clipped to one letter-height; base state stays readable. */
-.ticker-word { display: inline-flex; white-space: nowrap; vertical-align: bottom; }
-.ticker-cell { display: block; height: 1.5em; margin-block: -.15em; overflow: clip; clip-path: inset(.06em 0 0); }
-.ticker-track { display: block; transform: translateY(-75%); }
-.ticker-track > span { display: block; height: 1.5em; line-height: 1.2; padding-block: .15em; }
-.ticker-track > span:first-child { visibility: hidden; }
+.approach-title-word { display: inline-block; }
+@media (prefers-reduced-motion: no-preference) {
+  .approach-title-word { transform: translateY(calc(var(--approach-title-offset) * var(--approach-word-depth, 1))); }
+  #approach-title > .approach-title-word:first-child { --approach-word-depth: .8; }
+  .title-your { --approach-word-depth: .9; }
+}
+@media (max-width: 640px) {
+  :root:not([data-device-profile]) .approach h2 { font-size: clamp(48px, 16svmin, 72px); }
+  :root:not([data-device-profile]) .approach .title-your { display: block; }
+  :root:not([data-device-profile]) .approach .desktop-break { display: none; }
+}
 
 /* Original restrained hue ramp, with generated glass supplying subtle material only. */
 .hero {

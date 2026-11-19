@@ -1,67 +1,72 @@
 import { createDialKit, createDialRoot } from './vendor/dialkit/index.js';
 import './vendor/dialkit/styles.css';
 import './ticker-tuning.css';
-import { tickerDefaults } from './text-entrances.js';
+import { titleMotionDefaults } from './text-entrances.js';
+import { installTuningHelp } from './dial-help.js';
 
-export function mountTickerTuning(ticker, page) {
-  const host = document.createElement('div');
+export function mountTickerTuning(motion, page) {
+  const host = document.createElement('aside');
   host.className = 'ticker-tuning';
+  host.setAttribute('aria-label', 'Create Your Reality motion controls');
   host.setAttribute('data-lenis-prevent', '');
   page.append(host);
   createDialRoot({ target: host, position: 'bottom-right', theme: 'light', defaultOpen: true });
+
   const status = document.createElement('p');
   status.className = 'sr-only';
   status.setAttribute('role', 'status');
   host.append(status);
-  const { entry, roll } = tickerDefaults;
+
+  const { startPercent, settlePercent, travelPx } = titleMotionDefaults;
   const kit = createDialKit('Create Your Reality', {
-    entry: {
-      trigger: { type: 'select', default: entry.trigger, options: [
-        { value: 'section', label: 'Section edge (original)' },
-        { value: 'heading', label: 'Heading edge' },
-      ] },
-      insetPercent: [entry.insetPercent, -35, 45, 1],
+    preview: { type: 'action', label: 'Go to start of entrance' },
+    startPercent: [startPercent, 75, 100, 1],
+    settlePercent: [settlePercent, 30, 70, 1],
+    travelPx: {
+      desktop: [travelPx.desktop, 0, 40, 1],
+      tablet: [travelPx.tablet, 0, 40, 1],
+      phone: [travelPx.phone, 0, 40, 1],
     },
-    roll: {
-      durationMs: [roll.durationMs, 250, 1800, 25],
-      wordStaggerMs: [roll.wordStaggerMs, 0, 150, 5],
-      letterStaggerMs: [roll.letterStaggerMs, 0, 40, 1],
-      travelRows: [roll.travelRows, .25, 3, .25],
-      curve: { type: 'select', default: roll.curve, options: [
-        { value: 'original', label: 'Original' },
-        { value: 'gentle', label: 'Softer start' },
-        { value: 'balanced', label: 'Gradual start and finish' },
-        { value: 'linear', label: 'Even speed' },
-      ] },
-    },
-    replay: { type: 'action', label: 'Replay here' },
-    scrollTest: { type: 'action', label: 'Test scroll entry' },
     copy: { type: 'action', label: 'Copy settings' },
-    reset: { type: 'action', label: 'Reset to original' },
+    reset: { type: 'action', label: 'Reset settings' },
   }, {
-    id: 'ati-create-reality-ticker',
+    id: 'ati-create-reality-scroll',
     persist: true,
     async onAction(action) {
-      if (action === 'replay') ticker.replay();
-      if (action === 'scrollTest') ticker.testScrollEntry();
+      if (action === 'preview') {
+        motion.previewEntrance();
+        status.textContent = 'Scroll down to preview the entrance.';
+      }
       if (action === 'reset') kit.resetValues();
       if (action === 'copy') {
-        const { entry, roll } = kit.getValues();
-        const json = JSON.stringify({ entry, roll }, null, 2);
+        const { startPercent, settlePercent, travelPx } = kit.getValues();
+        const json = JSON.stringify({ startPercent, settlePercent, travelPx }, null, 2);
         try {
           await navigator.clipboard.writeText(json);
-          status.textContent = 'Ticker settings copied.';
+          status.textContent = 'Motion settings copied.';
         } catch {
           const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
           const download = document.createElement('a');
           download.href = url;
-          download.download = 'create-your-reality-ticker.json';
+          download.download = 'create-your-reality-motion.json';
           download.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
-          status.textContent = 'Ticker settings downloaded.';
+          status.textContent = 'Motion settings downloaded.';
         }
       }
     },
   });
-  kit.subscribe(({ entry, roll }) => ticker.update({ entry, roll }));
+  kit.subscribe(({ startPercent, settlePercent, travelPx }) => motion.update({ startPercent, settlePercent, travelPx }));
+  installTuningHelp(host, {
+    'Create Your Reality': 'Control the gentle upward movement of the heading as you scroll. The words stay still when scrolling stops.',
+    'Go to start of entrance': 'Move just before the heading begins its entrance, then scroll down to preview it.',
+    'Start Percent': 'Heading position as a percentage of viewport height when upward travel starts. Higher begins earlier, near the bottom of the screen.',
+    'Settle Percent': 'Heading position as a percentage of viewport height when the words reach their resting positions. Lower spreads the entrance over more scrolling.',
+    'Travel Px': 'Maximum upward travel in pixels for each layout. Higher makes the parallax more visible. Zero keeps the words in place.',
+    Desktop: 'Maximum travel in pixels for desktop layouts. Higher produces a larger upward entrance.',
+    Tablet: 'Maximum travel in pixels for tablet and compact layouts. Higher produces a larger upward entrance.',
+    Phone: 'Maximum travel in pixels for phone layouts. Higher produces a larger upward entrance.',
+    'Copy settings': 'Copy the current start, settle and travel values as JSON. A JSON download is used if clipboard access is unavailable.',
+    'Reset settings': 'Restore the current source defaults of 95 percent start, 55 percent settle and 32, 28 and 22 pixels of desktop, tablet and phone travel.',
+  });
 }
