@@ -308,13 +308,20 @@ button { font: inherit; color: inherit; }
   background: linear-gradient(90deg, #ccdee0, #c0d4df);
   box-shadow: 0 8px 36px 3px #89adb62b, inset 0 0 0 1px #ffffff50, inset 0 2px 8px #ffffff25, inset 0 -8px 30px #7d9fa31a;
 }
-/* A slow drift of the default casing gradient, independent of orientation input. */
+/* Keep gradient drift off the casing so the reveal cannot restart its entrance. */
 @media (prefers-reduced-motion: no-preference) {
-  .hero[data-scene='idle'] {
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: inherit;
     background-size: 124% 100%;
-    background-position: 50% 50%;
+    animation: casing-gradient-drift 16s ease-in-out infinite alternate;
+    animation-play-state: paused;
   }
-  .hero[data-scene='idle'][data-in-view='true'] { animation: casing-gradient-drift 16s ease-in-out infinite alternate; }
+  .hero[data-in-view='true']::after { animation-play-state: running; }
 }
 @keyframes casing-gradient-drift {
   from { background-position: 45% 50%; }
