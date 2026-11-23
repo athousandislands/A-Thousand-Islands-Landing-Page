@@ -1,6 +1,23 @@
-# A Thousand Islands — website redesign
+# A Thousand Islands Studio Website
 
-Work in this folder on the **redesign** branch. Production has not been changed. Do not merge to main or publish to production without explicit approval.
+The website for A Thousand Islands, an independent creative technology studio in Nairobi. I led the creative direction and development. The site uses frosted-glass visuals and muffled sound to make clicks and taps feel like uncovering something physical.
+
+[Visit the studio](https://athousandislands.tech/) · [Selected work](https://athousandislands.tech/#featured-work)
+
+- [Echo](https://athousandislands.tech/echo/) turns live sound into moving imagery.
+- [Pulse](https://athousandislands.tech/pulse/) lets people shape visuals with hand gestures.
+- [Creative Portfolio](https://athousandislands.tech/creative-portfolio/) documents the portfolio and its interactive Mind Map.
+
+## Design and implementation
+
+The homepage and Services use interactive reveals. Featured Work has a WebGL glass carousel with dedicated project pages and video demonstrations. Desktop and touch layouts share the same content, with controls adapted to each input.
+
+## Release history
+
+- **19 November 2026** — Refined the homepage and Services material, including the glass reveal and casing behaviour.
+- **18 November 2026** — Improved project media playback and fixed a stalled navigation state.
+
+Production is built from `main` and served at [athousandislands.tech](https://athousandislands.tech/).
 
 ## Where everything is
 
@@ -30,7 +47,7 @@ Run `npm run build` to produce **build-preview/**. Run `npm run preview` to view
 
 To tune Services, open http://localhost:5174/?tune=services#services-glass and expand the sliders button at the bottom right. Use **Go to glass surface** or **Replay scroll transition**. Arrival controls coordinate colour and staggered headings. Position controls cover Visual, Direction and Digital Experiences, with separate Phone groups. Controls are saved in this browser; **Copy parameters** exports a configuration to review. The tuning panel is development-only and excluded from production builds.
 
-The existing Vercel configuration builds this source folder into build-preview. A future preview deployment must remain on the redesign branch until approved.
+Vercel builds the source into `build-preview/`.
 
 Project tuning panels use the documented vendored DialKit in `website-source/vendor/dialkit/`. Include a question-mark explanation for each control and a JSON download. Pulse layout and fade delay are at `/pulse/?tune=pulse`.
 
